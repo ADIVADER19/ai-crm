@@ -1,0 +1,261 @@
+# AI CRM Chatbot
+
+A sophisticated AI-powered CRM chatbot system built with FastAPI, OpenAI GPT, and RAG (Retrieval-Augmented Generation) capabilities for real estate property management.
+
+## Features
+
+- **AI-Powered Chat**: GPT-based conversational AI with context awareness
+- **RAG Integration**: Retrieval-Augmented Generation using property knowledge base
+- **User Management**: Complete CRM system for user creation and management
+- **Conversation History**: Persistent chat history and conversation tracking
+- **File Upload**: CSV data upload for knowledge base expansion
+- **Authentication**: JWT-based authentication system
+- **REST API**: Complete RESTful API with FastAPI
+- **Vector Search**: FAISS-powered semantic search for property data
+
+## Project Structure
+
+```
+ai-crm-chatbot/
+├── main.py                 # FastAPI application entry point
+├── start_server.py         # Server startup script
+├── chat.py                 # Standalone chat client for testing
+├── requirements.txt        # Python dependencies
+├── .env                    # Environment variables
+├── HackathonInternalKnowledgeBase.csv  # Sample property data
+├── models/
+│   ├── user.py            # User data models
+│   └── conversation.py    # Chat data models
+├── routes/
+│   ├── auth.py            # Authentication endpoints
+│   ├── chat.py            # Chat endpoints
+│   ├── crm.py             # CRM endpoints
+│   └── upload.py          # File upload endpoints
+├── services/
+│   ├── db_service.py      # Database connection
+│   ├── crm_service.py     # CRM business logic
+│   ├── openai_service.py  # OpenAI integration
+│   └── rag_service.py     # RAG and vector search
+└── scripts/
+    └── csv_mongo.py       # Data import utility
+```
+
+## Quick Start
+
+### Prerequisites
+
+- Python 3.8+
+- MongoDB Atlas account or local MongoDB
+- OpenAI API key
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd ai-crm-chatbot
+   ```
+
+2. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Configure environment variables**
+   
+   Update `.env` file with your credentials:
+   ```env
+   OPENAI_API_KEY=your_openai_api_key_here
+   MONGO_URI=your_mongodb_connection_string_here
+   JWT_SECRET_KEY=your_jwt_secret_key_here
+   ```
+
+4. **Start the server**
+   ```bash
+   python start_server.py
+   ```
+   
+   Or manually:
+   ```bash
+   uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   ```
+
+5. **Access the application**
+   - API Server: http://localhost:8000
+   - API Documentation: http://localhost:8000/docs
+   - Interactive API: http://localhost:8000/redoc
+
+## Usage
+
+### Using the Chat Client
+
+Run the standalone chat client for testing:
+
+```bash
+python chat.py
+```
+
+This will guide you through:
+1. Creating a user account
+2. Starting a chat session
+3. Asking questions about properties
+4. Viewing conversation history
+
+### API Endpoints
+
+#### Authentication
+- `POST /auth/login` - User login
+- `GET /auth/me` - Get current user info
+- `POST /auth/verify` - Verify token
+
+#### CRM Management
+- `POST /crm/create_user` - Create new user
+- `PUT /crm/update_user/{user_id}` - Update user
+- `GET /crm/user/{user_id}` - Get user details
+- `GET /crm/conversations/{user_id}` - Get conversation history
+
+#### Chat System
+- `POST /chat/` - Send message to chatbot
+
+#### File Upload
+- `POST /upload/csv` - Upload CSV data
+- `POST /upload/knowledge-base` - Upload knowledge base data
+- `GET /upload/collections` - List collections
+- `GET /upload/collection/{name}/count` - Get document count
+- `DELETE /upload/collection/{name}` - Clear collection
+
+### Sample API Requests
+
+#### Create a User
+```bash
+curl -X POST "http://localhost:8000/crm/create_user" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John Doe",
+    "email": "john@example.com",
+    "company": "ABC Real Estate"
+  }'
+```
+
+#### Send a Chat Message
+```bash
+curl -X POST "http://localhost:8000/chat/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": "USER_ID_HERE",
+    "message": "Show me properties in Manhattan under $2000/month"
+  }'
+```
+
+## Data Import
+
+### Using the CSV Script
+
+Import the sample property data:
+
+```bash
+python scripts/csv_mongo.py
+```
+
+### Manual Upload via API
+
+Upload CSV files through the upload endpoint:
+
+```bash
+curl -X POST "http://localhost:8000/upload/knowledge-base" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -F "file=@HackathonInternalKnowledgeBase.csv"
+```
+
+## Architecture
+
+### Components
+
+1. **FastAPI Server**: RESTful API with automatic documentation
+2. **MongoDB**: Document database for users, conversations, and property data
+3. **OpenAI GPT**: Conversational AI for natural language processing
+4. **FAISS Vector Store**: Semantic search for property matching
+5. **LangChain**: RAG pipeline for knowledge retrieval
+
+### Data Flow
+
+1. User sends a message through chat endpoint
+2. System retrieves conversation history from MongoDB
+3. RAG service searches relevant property data using FAISS
+4. Context is built with history + retrieved knowledge
+5. OpenAI generates response using enriched context
+6. Response is saved to conversation history
+
+## Development
+
+### Adding New Features
+
+1. **New API Endpoints**: Add routes in `routes/` directory
+2. **Business Logic**: Implement in `services/` directory
+3. **Data Models**: Define in `models/` directory
+4. **Database Changes**: Update collections in `services/db_service.py`
+
+### Testing
+
+Test the API using:
+- Interactive docs at `/docs`
+- Command-line chat client: `python chat.py`
+- API testing tools like Postman or curl
+
+## Configuration
+
+### Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `OPENAI_API_KEY` | OpenAI API key for GPT access | Yes |
+| `MONGO_URI` | MongoDB connection string | Yes |
+| `JWT_SECRET_KEY` | Secret key for JWT tokens | No (has default) |
+
+### MongoDB Collections
+
+- `users`: User account information
+- `conversations`: Chat history and messages
+- `knowledge_base`: Property data for RAG search
+
+## Troubleshooting
+
+### Common Issues
+
+1. **MongoDB Connection Error**
+   - Check your `MONGO_URI` in `.env`
+   - Ensure MongoDB is running
+   - Verify network access to MongoDB Atlas
+
+2. **OpenAI API Error**
+   - Verify `OPENAI_API_KEY` is correct
+   - Check API quota and billing
+   - Ensure internet connectivity
+
+3. **Import Errors**
+   - Run `pip install -r requirements.txt`
+   - Check Python version (3.8+ required)
+
+4. **Vector Store Build Error**
+   - Ensure knowledge base collection has data
+   - Check MongoDB connection
+   - Verify OpenAI embeddings are accessible
+
+## License
+
+This project is licensed under the MIT License.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## Support
+
+For issues and questions:
+1. Check the troubleshooting section
+2. Review API documentation at `/docs`
+3. Create an issue in the repository

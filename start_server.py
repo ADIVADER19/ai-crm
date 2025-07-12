@@ -1,11 +1,4 @@
-#!/usr/bin/env python3
-"""
-Startup script for the AI CRM Chatbot
-This script initializes the database and starts the FastAPI server
-"""
-
 import uvicorn
-import os
 from dotenv import load_dotenv
 
 def main():
@@ -13,32 +6,29 @@ def main():
     
     print("=== AI CRM Chatbot Startup ===")
     print("Initializing database connections...")
-    
-    # Import after loading env vars
+
     from services.db_service import client
     from services.rag_service import build_vectorstore, get_vector_store_status
     
     try:
-        # Test database connection
         client.admin.command('ping')
-        print("✓ MongoDB connection successful")
+        print("MongoDB connection successful")
         
-        # Initialize vector store (will check cache first)
         print("Initializing RAG vector store...")
         success = build_vectorstore()
         
         if success:
-            print("✓ RAG vector store ready")
+            print("RAG vector store ready")
         else:
-            print("⚠ RAG vector store initialization failed")
-            print("  Server will continue but RAG functionality may be limited")
+            print("RAG vector store initialization failed")
+            print("Server will continue but RAG functionality may be limited")
             
-        # Show vector store status
+        # show vector store status
         status = get_vector_store_status()
         print(f"Vector store status: {status}")
         
     except Exception as e:
-        print(f"⚠ Startup warning: {e}")
+        print(f"Startup warning: {e}")
         print("Server will start anyway...")
     
     print("\nStarting FastAPI server...")
@@ -46,7 +36,7 @@ def main():
     print("API docs at: http://localhost:8000/docs")
     print("\nPress Ctrl+C to stop the server")
     
-    # Start the server
+    # start
     uvicorn.run(
         "main:app", 
         host="0.0.0.0", 

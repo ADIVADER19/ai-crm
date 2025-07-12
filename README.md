@@ -56,12 +56,26 @@ ai-crm-chatbot/
    cd ai-crm-chatbot
    ```
 
-2. **Install dependencies**
+2. **Create and activate virtual environment**
+   ```bash
+   # Create virtual environment
+   python -m venv venv
+   
+   # Activate virtual environment
+   # On Windows (PowerShell):
+   .\venv\Scripts\Activate.ps1
+   # On Windows (Command Prompt):
+   venv\Scripts\activate.bat
+   # On macOS/Linux:
+   source venv/bin/activate
+   ```
+
+3. **Install dependencies**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Configure environment variables**
+4. **Configure environment variables**
    
    Update `.env` file with your credentials:
    ```env
@@ -70,7 +84,7 @@ ai-crm-chatbot/
    JWT_SECRET_KEY=your_jwt_secret_key_here
    ```
 
-4. **Start the server**
+5. **Start the server**
    ```bash
    python start_server.py
    ```
@@ -80,7 +94,7 @@ ai-crm-chatbot/
    uvicorn main:app --reload --host 0.0.0.0 --port 8000
    ```
 
-5. **Access the application**
+6. **Access the application**
    - API Server: http://localhost:8000
    - API Documentation: http://localhost:8000/docs
    - Interactive API: http://localhost:8000/redoc

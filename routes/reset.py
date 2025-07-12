@@ -4,18 +4,17 @@ from routes.auth import verify_token
 
 router = APIRouter()
 
-@router.post("/reset")
+@router.put("/reset")
 async def reset_conversations(user_id: str = Depends(verify_token)):
     try:
         from services.db_service import conversations_collection
-        
         result = conversations_collection.update_many(
-            {"user_id": user_id, "resolved": False},
-            {"$set": {"resolved": True, "updated_at": datetime.utcnow()}}
+            {"user_id": user_id},
+            {"$set": {"messages": [], "updated_at": datetime.utcnow()}}
         )
         
         return {
-            "message": f"Reset {result.modified_count} active conversations",
+            "message": f"Reset {result.modified_count} conversations (cleared messages)",
             "user_id": user_id
         }
         

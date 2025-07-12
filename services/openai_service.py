@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 from services.rag_service import query_knowledge_base
 from services.crm_service import get_recent_conversations
+from helpers import classify_message_category
 
 load_dotenv()
 
@@ -11,9 +12,9 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 def generate_response(user_id: str, user_input: str):
     try:
         print(f"Processing request for user: {user_id}")
-        print(f"User input: {user_input}")
-        
-        # Step 1: Build conversation history (limit for performance)
+        print(f"User input: {user_input}")        
+        detected_category = classify_message_category(user_input)
+
         try:
             recent_conversations = get_recent_conversations(user_id, limit=3)
             print(f"Retrieved {len(recent_conversations)} recent conversations")
@@ -41,33 +42,30 @@ def generate_response(user_id: str, user_input: str):
             """
         }]
 
-        # Add recent conversation context (limited)
+        # add recent conversation context only 2 messages from each
         recent_messages = []
         for conv in recent_conversations:
-            # Only add last 2 messages from each conversation
             for msg in conv.get("messages", [])[-2:]:
                 recent_messages.append({
                     "role": msg["role"], 
                     "content": msg["content"]
                 })
         
-        # Limit total context messages to prevent token overflow
+        # limit total messages to reduce token usage
         if len(recent_messages) > 6:
             recent_messages = recent_messages[-6:]
         
         messages.extend(recent_messages)
         print(f"Added {len(recent_messages)} messages from history")
 
-        # Step 2: Get relevant knowledge
         try:
             print("Querying knowledge base...")
-            retrieved_knowledge = query_knowledge_base(user_input, k=5)
+            retrieved_knowledge = query_knowledge_base(user_input, k=50)
             print(f"Retrieved knowledge: {retrieved_knowledge[:200]}..." if retrieved_knowledge else "No knowledge retrieved")
         except Exception as e:
             print(f"Error querying knowledge base: {e}")
             retrieved_knowledge = "Error accessing knowledge base"
 
-        # Step 3: Add knowledge to context
         if retrieved_knowledge and "No relevant information" not in retrieved_knowledge and "Error" not in retrieved_knowledge:
             messages.append({
                 "role": "system",
@@ -87,12 +85,11 @@ Please use this information to answer the user's question. Remember to mention t
         
         print(f"Sending {len(messages)} messages to OpenAI")
         
-        # Step 4: Call OpenAI API
         try:
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=messages,
-                max_tokens=1500,
+                max_tokens=2000,
                 temperature=0.3,
                 top_p=0.9,
                 frequency_penalty=0.1,
@@ -101,14 +98,14 @@ Please use this information to answer the user's question. Remember to mention t
             
             ai_response = response.choices[0].message.content
             print(f"OpenAI response received: {ai_response[:100]}...")
-            return ai_response
+            return ai_response, detected_category
             
         except Exception as e:
             print(f"OpenAI API Error: {e}")
-            return f"I apologize, but I'm experiencing an API issue: {str(e)}"
+            return f"I apologize, but I'm experiencing an API issue: {str(e)}", detected_category
 
     except Exception as e:
         print(f"General error in generate_response: {e}")
         import traceback
         traceback.print_exc()
-        return f"I apologize, but I'm having trouble processing your request: {str(e)}"
+        return f"I apologize, but I'm having trouble processing your request: {str(e)}", "general"

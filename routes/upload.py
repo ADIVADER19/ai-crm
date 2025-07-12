@@ -1,8 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
-import csv
-from io import StringIO
 from services.db_service import knowledge_base_collection
 from routes.auth import verify_token
+from helpers import process_csv_content
 
 router = APIRouter(prefix="/upload")
 
@@ -18,18 +17,10 @@ async def upload_csv(
         contents = await file.read()
         csv_content = contents.decode('utf-8')
         
-        csv_reader = csv.DictReader(StringIO(csv_content))
-        documents = []
-        
-        for row in csv_reader:
-            doc = {k.strip(): v.strip() for k, v in row.items() if v.strip()}
-            if doc:
-                documents.append(doc)
+        documents = process_csv_content(csv_content)
         
         if documents:
             result = knowledge_base_collection.insert_many(documents)
-            
-            # Reset vector store to force rebuild on next query
             import services.rag_service as rag
             rag.vector_store = None
             rag.vector_store_loaded = False

@@ -8,10 +8,7 @@ class UserCreate(BaseModel):
     preferences: Optional[str] = None
 
 class UserUpdate(BaseModel):
-    name: Optional[str]
-    email: Optional[str]
-    company: Optional[str]
-    preferences: Optional[str]
-
-class UserInDB(UserCreate):
-    user_id: str
+    name: Optional[str] = None
+    email: Optional[str] = None
+    company: Optional[str] = None
+    preferences: Optional[str] = None

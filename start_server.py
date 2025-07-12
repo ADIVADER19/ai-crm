@@ -35,18 +35,16 @@ def main():
             
         # Show vector store status
         status = get_vector_store_status()
-        print(f"  Status: Loaded={status['loaded']}, Available={status['available']}, Cache={status['cache_exists']}")
+        print(f"Vector store status: {status}")
         
     except Exception as e:
-        print(f"✗ Database initialization failed: {e}")
-        print("Please check your MongoDB connection and try again.")
-        return
+        print(f"⚠ Startup warning: {e}")
+        print("Server will start anyway...")
     
-    print("\n=== Starting FastAPI Server ===")
-    print("Server will be available at: http://localhost:8000")
-    print("API Documentation: http://localhost:8000/docs")
-    print("Press Ctrl+C to stop the server")
-    print()
+    print("\nStarting FastAPI server...")
+    print("API will be available at: http://localhost:8000")
+    print("API docs at: http://localhost:8000/docs")
+    print("\nPress Ctrl+C to stop the server")
     
     # Start the server
     uvicorn.run(

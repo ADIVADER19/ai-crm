@@ -107,15 +107,17 @@ def check_openai():
     print("\n=== OpenAI API Check ===")
     
     try:
-        import openai
-        openai.api_key = os.getenv("OPENAI_API_KEY")
+        from openai import OpenAI
         
-        if not openai.api_key:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
             print("✗ OPENAI_API_KEY not set")
             return False
         
+        client = OpenAI(api_key=api_key)
+        
         # Test API call
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": "Hello"}],
             max_tokens=5

@@ -1,39 +1,114 @@
+from openai import OpenAI
 import os
-import openai
 from dotenv import load_dotenv
-from services.crm_service import get_conversations
 from services.rag_service import query_knowledge_base
+from services.crm_service import get_recent_conversations
 
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def generate_response(user_id: str, user_input: str):
-    # Memory: Fetch conversation history
-    history = get_conversations(user_id)
-    messages = [{"role": "system", "content": "You are a helpful assistant for lease-related queries."}]
+    try:
+        print(f"Processing request for user: {user_id}")
+        print(f"User input: {user_input}")
+        
+        # Step 1: Build conversation history (limit for performance)
+        try:
+            recent_conversations = get_recent_conversations(user_id, limit=3)
+            print(f"Retrieved {len(recent_conversations)} recent conversations")
+        except Exception as e:
+            print(f"Error getting conversations: {e}")
+            recent_conversations = []
+        
+        messages = [{
+            "role": "system", 
+            "content": """You are a helpful real estate assistant specializing in Manhattan rental properties in New York City.
 
-    for convo in history:
-        for msg in convo.get("messages", []):
-            messages.append({"role": msg["role"], "content": msg["content"]})
+            IMPORTANT CONTEXT:
+            - ALL properties in our database are located in Manhattan, NYC
+            - Addresses like "15 W 38th St" and "36 W 36th St" are Manhattan locations
+            - When users ask about "properties" without specifying location, assume they mean Manhattan properties
+            - Our database contains commercial rental spaces in Manhattan
+            
+            Guidelines:
+            - Always mention that properties are in Manhattan when responding
+            - Include specific property details (address, price, size, floor, suite)
+            - If multiple properties match, list them clearly with rent prices
+            - When users ask for "cheapest" properties, focus on the lowest rent options
+            - Include broker contact information when available
+            - Format your response in a clear, organized manner
+            """
+        }]
 
-    # Step 1: Fetch related knowledge from RAG
-    retrieved_knowledge = query_knowledge_base(user_input)
+        # Add recent conversation context (limited)
+        recent_messages = []
+        for conv in recent_conversations:
+            # Only add last 2 messages from each conversation
+            for msg in conv.get("messages", [])[-2:]:
+                recent_messages.append({
+                    "role": msg["role"], 
+                    "content": msg["content"]
+                })
+        
+        # Limit total context messages to prevent token overflow
+        if len(recent_messages) > 6:
+            recent_messages = recent_messages[-6:]
+        
+        messages.extend(recent_messages)
+        print(f"Added {len(recent_messages)} messages from history")
 
-    # Step 2: Inject knowledge into prompt
-    messages.append({
-        "role": "system",
-        "content": f"Here is some helpful background knowledge:\n{retrieved_knowledge}"
-    })
+        # Step 2: Get relevant knowledge
+        try:
+            print("Querying knowledge base...")
+            retrieved_knowledge = query_knowledge_base(user_input, k=5)
+            print(f"Retrieved knowledge: {retrieved_knowledge[:200]}..." if retrieved_knowledge else "No knowledge retrieved")
+        except Exception as e:
+            print(f"Error querying knowledge base: {e}")
+            retrieved_knowledge = "Error accessing knowledge base"
 
-    # Step 3: Add user's current message
-    messages.append({"role": "user", "content": user_input})
+        # Step 3: Add knowledge to context
+        if retrieved_knowledge and "No relevant information" not in retrieved_knowledge and "Error" not in retrieved_knowledge:
+            messages.append({
+                "role": "system",
+                "content": f"""Here are the relevant Manhattan commercial properties from our database:
 
-    # Step 4: Generate response
-    response = openai.ChatCompletion.create(
-        model="gpt-4o-mini",
-        messages=messages,
-        max_tokens=300,
-        temperature=0.7
-    )
+{retrieved_knowledge}
 
-    return response.choices[0].message.content
+Please use this information to answer the user's question. Remember to mention that all these properties are located in Manhattan, NYC. Be specific about properties that match their criteria."""
+            })
+        else:
+            messages.append({
+                "role": "system",
+                "content": "No specific property matches were found in our Manhattan database. Provide general guidance about Manhattan commercial real estate and suggest the user contact us for more options."
+            })
+            
+        messages.append({"role": "user", "content": user_input})
+        
+        print(f"Sending {len(messages)} messages to OpenAI")
+        
+        # Step 4: Call OpenAI API
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=messages,
+                max_tokens=1500,
+                temperature=0.3,
+                top_p=0.9,
+                frequency_penalty=0.1,
+                presence_penalty=0.1
+            )
+            
+            ai_response = response.choices[0].message.content
+            print(f"OpenAI response received: {ai_response[:100]}...")
+            return ai_response
+            
+        except Exception as e:
+            print(f"OpenAI API Error: {e}")
+            return f"I apologize, but I'm experiencing an API issue: {str(e)}"
+
+    except Exception as e:
+        print(f"General error in generate_response: {e}")
+        import traceback
+        traceback.print_exc()
+        return f"I apologize, but I'm having trouble processing your request: {str(e)}"

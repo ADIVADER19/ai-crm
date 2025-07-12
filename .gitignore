@@ -38,6 +38,9 @@ ENV/
 cache/
 *.pkl
 
+# Scripts (optional - uncomment if you don't want to track these)
+verify_setup.py
+
 # Logs
 *.log
 

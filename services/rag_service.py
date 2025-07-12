@@ -161,7 +161,7 @@ def build_vectorstore():
         vector_store_loaded = False
         return False
 
-def query_knowledge_base(query: str, k: int = 3):
+def query_knowledge_base(query: str, k: int = 30):
     global vector_store, vector_store_loaded
     
     try:

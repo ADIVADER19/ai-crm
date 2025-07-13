@@ -9,11 +9,29 @@ load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-def generate_response(user_id: str, user_input: str):
+def generate_response(user_id: str, user_input: str, user_details: dict = None):
     try:
         print(f"Processing request for user: {user_id}")
         print(f"User input: {user_input}")        
         detected_category = classify_message_category(user_input)
+
+        # Build user context from provided details
+        user_context = ""
+        if user_details:
+            name = user_details.get('name', '')
+            company = user_details.get('company', '')
+            preferences = user_details.get('preferences', '')
+            
+            user_context = f"""
+USER PROFILE:
+- Name: {name}
+- Company: {company}  
+- Preferences: {preferences}
+
+IMPORTANT: Use this information to personalize responses. If the user has budget or location preferences, prioritize properties that match their criteria."""
+            print(f"Using user context for personalization: {name} from {company}")
+        else:
+            print("No user details provided, using default context")
 
         try:
             recent_conversations = get_recent_conversations(user_id, limit=3)
@@ -24,7 +42,9 @@ def generate_response(user_id: str, user_input: str):
         
         messages = [{
             "role": "system", 
-            "content": """You are a helpful real estate assistant specializing in Manhattan rental properties in New York City.
+            "content": f"""You are a helpful real estate assistant specializing in Manhattan rental properties in New York City.
+
+            {user_context}
 
             IMPORTANT CONTEXT:
             - ALL properties in our database are located in Manhattan, NYC
@@ -39,6 +59,7 @@ def generate_response(user_id: str, user_input: str):
             - When users ask for "cheapest" properties, focus on the lowest rent options
             - Include broker contact information when available
             - Format your response in a clear, organized manner
+            - PRIORITIZE properties that match the user's stated preferences (budget, location, etc.)
             """
         }]
 

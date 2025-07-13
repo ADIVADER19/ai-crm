@@ -3,6 +3,9 @@ import os
 import csv
 import jwt
 import datetime
+import json
+import PyPDF2
+import io
 from io import StringIO
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -121,3 +124,79 @@ def process_csv_content(csv_content: str) -> list:
     except Exception as e:
         print(f"Error processing CSV content: {e}")
         return []
+
+
+def process_pdf_content(file_content: bytes) -> list:
+    """Process PDF file and extract text content"""
+    try:
+        pdf_reader = PyPDF2.PdfReader(io.BytesIO(file_content))
+        text_content = ""
+        for page in pdf_reader.pages:
+            text_content += page.extract_text() + "\n"
+        
+        # Split into chunks (you can adjust chunk size as needed)
+        chunks = [text_content[i:i+1000] for i in range(0, len(text_content), 1000)]
+        documents = []
+        for i, chunk in enumerate(chunks):
+            if chunk.strip():
+                documents.append({
+                    "content": chunk.strip(),
+                    "type": "pdf",
+                    "chunk_id": i
+                })
+        return documents
+    except Exception as e:
+        raise Exception(f"Error processing PDF: {str(e)}")
+
+def process_txt_content(file_content: str) -> list:
+    """Process TXT file content"""
+    # Split into chunks (you can adjust chunk size as needed)
+    chunks = [file_content[i:i+1000] for i in range(0, len(file_content), 1000)]
+    documents = []
+    for i, chunk in enumerate(chunks):
+        if chunk.strip():
+            documents.append({
+                "content": chunk.strip(),
+                "type": "txt",
+                "chunk_id": i
+            })
+    return documents
+
+def process_json_content(file_content: str) -> list:
+    """Process JSON file content"""
+    try:
+        data = json.loads(file_content)
+        documents = []
+        
+        # Handle different JSON structures
+        if isinstance(data, list):
+            for i, item in enumerate(data):
+                if isinstance(item, dict):
+                    # Convert dict to readable text
+                    content = json.dumps(item, indent=2)
+                else:
+                    content = str(item)
+                documents.append({
+                    "content": content,
+                    "type": "json",
+                    "item_id": i
+                })
+        elif isinstance(data, dict):
+            # Single JSON object
+            content = json.dumps(data, indent=2)
+            documents.append({
+                "content": content,
+                "type": "json",
+                "item_id": 0
+            })
+        else:
+            # Simple value
+            documents.append({
+                "content": str(data),
+                "type": "json",
+                "item_id": 0
+            })
+        
+        return documents
+    except json.JSONDecodeError as e:
+        raise Exception(f"Invalid JSON format: {str(e)}")

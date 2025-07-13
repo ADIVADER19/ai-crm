@@ -8,24 +8,13 @@ def main():
     print("Initializing database connections...")
 
     from services.db_service import client
-    from services.rag_service import build_vectorstore, get_vector_store_status
     
     try:
         client.admin.command('ping')
         print("MongoDB connection successful")
         
-        print("Initializing RAG vector store...")
-        success = build_vectorstore()
-        
-        if success:
-            print("RAG vector store ready")
-        else:
-            print("RAG vector store initialization failed")
-            print("Server will continue but RAG functionality may be limited")
-            
-        # show vector store status
-        status = get_vector_store_status()
-        print(f"Vector store status: {status}")
+        print("Vector store will be built when documents are uploaded via /upload/upload_docs")
+        print("Ready to receive uploads and process conversations")
         
     except Exception as e:
         print(f"Startup warning: {e}")

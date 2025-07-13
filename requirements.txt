@@ -12,3 +12,4 @@ PyJWT
 python-multipart
 pandas
 requests
+PyPDF2

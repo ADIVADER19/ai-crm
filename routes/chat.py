@@ -10,7 +10,7 @@ from services.crm_service import (
     get_conversation_by_id,
     should_use_existing_category
 )
-from routes.auth import verify_token
+from routes.auth import verify_token, get_user_from_token
 
 router = APIRouter(prefix="/chat")
 
@@ -32,9 +32,10 @@ class ConversationHistory(BaseModel):
 @router.post("/", response_model=ChatResponse)
 async def chat(
     chat_message: ChatMessage,
-    user_id: str = Depends(verify_token)
+    user_details: dict = Depends(get_user_from_token)
 ):
     start_time = time.time()
+    user_id = user_details["user_id"]
     
     if not chat_message.message or not chat_message.message.strip():
         raise HTTPException(
@@ -43,7 +44,7 @@ async def chat(
         )
 
     try:# detect category
-        ai_response, detected_category = generate_response(user_id, chat_message.message)
+        ai_response, detected_category = generate_response(user_id, chat_message.message, user_details)
         #finalize category
         final_category = should_use_existing_category(user_id, detected_category)
         # find or make conversation

@@ -99,6 +99,11 @@ ai-crm-chatbot/
    - API Documentation: http://localhost:8000/docs
    - Interactive API: http://localhost:8000/redoc
 
+### Additional Documentation
+- **API Contracts**: See `API_CONTRACTS.md` for detailed endpoint specifications and examples
+- **System Architecture**: See `ARCHITECTURE.md` for system design and mermaid diagrams  
+- **Sample Conversations**: See `SAMPLE_CONVERSATIONS.md` for example interactions and testing scenarios
+
 ## Usage
 
 ### Using the Chat Client
@@ -121,6 +126,7 @@ This will guide you through:
 - `POST /auth/login` - User login
 - `GET /auth/me` - Get current user info
 - `POST /auth/verify` - Verify token
+- `POST /auth/logout` - User logout
 
 #### CRM Management
 - `POST /crm/create_user` - Create new user
@@ -130,13 +136,13 @@ This will guide you through:
 
 #### Chat System
 - `POST /chat/` - Send message to chatbot
+- `GET /chat/categories` - Get conversation categories
 
 #### File Upload
-- `POST /upload/csv` - Upload CSV data
-- `POST /upload/knowledge-base` - Upload knowledge base data
-- `GET /upload/collections` - List collections
-- `GET /upload/collection/{name}/count` - Get document count
-- `DELETE /upload/collection/{name}` - Clear collection
+- `POST /upload_docs/` - Upload documents (PDF, TXT, CSV, JSON)
+
+#### Reset
+- `PUT /reset` - Clear conversation memory
 
 ### Sample API Requests
 
@@ -155,8 +161,8 @@ curl -X POST "http://localhost:8000/crm/create_user" \
 ```bash
 curl -X POST "http://localhost:8000/chat/" \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -d '{
-    "user_id": "USER_ID_HERE",
     "message": "Show me properties in Manhattan under $2000/month"
   }'
 ```
@@ -173,11 +179,11 @@ python scripts/csv_mongo.py
 
 ### Manual Upload via API
 
-Upload CSV files through the upload endpoint:
+Upload files through the upload endpoint:
 
 ```bash
-curl -X POST "http://localhost:8000/upload/knowledge-base" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+curl -X POST "http://localhost:8000/upload_docs/" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -F "file=@HackathonInternalKnowledgeBase.csv"
 ```
 

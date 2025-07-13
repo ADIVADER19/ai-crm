@@ -6,6 +6,7 @@ import jwt
 from typing import Optional
 from services.crm_service import get_user, create_user
 from helpers import create_access_token, verify_token_payload
+from bson import ObjectId
 
 router = APIRouter(prefix="/auth")
 security = HTTPBearer()
@@ -28,6 +29,28 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
         token = credentials.credentials
         user_id = verify_token_payload(token)
         return user_id
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+def get_user_from_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        token = credentials.credentials
+        user_id = verify_token_payload(token)
+        
+        user = get_user(user_id)
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {
+            "user_id": user_id,
+            "email": user.get("email", ""),
+            "name": user.get("name", ""),
+            "company": user.get("company", ""),
+            "preferences": user.get("preferences", "")
+        }
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token has expired")
     except jwt.InvalidTokenError:

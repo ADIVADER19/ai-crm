@@ -13,3 +13,4 @@ python-multipart
 pandas
 requests
 PyPDF2
+bcrypt

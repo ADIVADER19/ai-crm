@@ -1,4 +1,4 @@
-# AI CRM Chatbot - Sample Conversation Logs
+# RentRadar Chatbot - Sample Conversation Logs
 
 ## Test Scenario: Real Estate Property Search
 

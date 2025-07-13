@@ -1,4 +1,4 @@
-# AI CRM Chatbot - API Contracts
+# RentRadar Chatbot - API Contracts
 
 ## Base URL
 ```

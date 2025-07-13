@@ -29,7 +29,6 @@ class UserResponse(BaseModel):
     name: Optional[str] = None
 
 def verify_password(password: str, hashed: str) -> bool:
-    """Verify password against hash"""
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -66,7 +65,6 @@ def get_user_from_token(credentials: HTTPAuthorizationCredentials = Depends(secu
 
 @router.post("/login", response_model=TokenResponse)
 def login(login_request: LoginRequest, response: Response):
-    # Find user by email
     user = users_collection.find_one({"email": login_request.email})
     
     if not user:
@@ -75,7 +73,6 @@ def login(login_request: LoginRequest, response: Response):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     access_token = create_access_token(data={"sub": str(user["_id"])})
     
-    # Set cookie in response
     response.set_cookie(
         key="access_token",
         value=access_token,
@@ -113,6 +110,5 @@ def get_current_user(user_id: str = Depends(verify_token)):
 
 @router.post("/logout")
 def logout(response: Response):
-    # Clear the cookie
     response.delete_cookie(key="access_token")
     return {"message": "Logged out successfully"}

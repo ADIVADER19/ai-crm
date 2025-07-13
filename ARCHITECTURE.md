@@ -1,131 +1,144 @@
-# AI CRM Chatbot - System Architecture
+# RentRadar - System Architecture
 
-## Mermaid Architecture Diagram
+## CRM Schema
+
+### MongoDB Collections Schema
+
+#### Users Collection
+```json
+{
+  "_id": "ObjectId",
+  "name": "string",
+  "email": "string (unique)",
+  "company": "string",
+  "preferences": "string",
+  "password": "string (hashed)"
+}
+```
+
+#### Conversations Collection
+```json
+{
+  "_id": "ObjectId",
+  "user_id": "ObjectId (references users._id)",
+  "category": "string (property_search/general_inquiry/pricing_inquiry)",
+  "messages": [
+    {
+      "role": "string (user/assistant)",
+      "content": "string",
+      "timestamp": "ISODate"
+    }
+  ],
+  "is_active": "boolean",
+  "created_at": "ISODate",
+  "updated_at": "ISODate"
+}
+```
+
+#### Knowledge Base Collection
+```json
+{
+  "_id": "ObjectId",
+  "content": "string",
+  "metadata": {
+    "source": "string",
+    "address": "string",
+    "monthly_rent": "number",
+    "square_footage": "number",
+    "building_class": "string",
+    "property_type": "string",
+    "amenities": "array"
+  },
+  "created_at": "ISODate"
+}
+```
+
+## System Architecture Diagram
 
 ```mermaid
-graph TB
-    subgraph "Client Layer"
-        UI[Web UI / API Client]
-    end
-    
-    subgraph "API Gateway"
-        FastAPI[FastAPI Server<br/>Port 8000]
-    end
-    
-    subgraph "Authentication"
-        JWT[JWT Middleware<br/>verify_token]
-    end
-    
-    subgraph "API Routes"
-        AuthR[/auth/*<br/>Login, User Info]
-        ChatR[/chat<br/>AI Conversations]
-        CRMR[/crm/*<br/>User Management]
-        UploadR[/upload_docs/<br/>File Upload]
-        ResetR[/reset<br/>Clear Memory]
-    end
-    
-    subgraph "Services Layer"
-        OpenAI[OpenAI Service<br/>GPT-4o-mini]
-        RAG[RAG Service<br/>FAISS Vector Store]
-        CRM[CRM Service<br/>User Management]
-        DB[Database Service<br/>MongoDB Client]
-    end
-    
-    subgraph "Data Processing"
-        Helpers[helpers.py<br/>File Processors]
-        CSV[CSV Processor]
-        PDF[PDF Processor]
-        TXT[TXT Processor]
-        JSON[JSON Processor]
-    end
-    
-    subgraph "External Services"
-        OpenAIAPI[OpenAI API<br/>gpt-4o-mini]
-        MongoDB[(MongoDB Database)]
-        VectorDB[(FAISS Vector Store<br/>Local Files)]
-    end
-    
-    subgraph "Database Collections"
-        Users[(users_collection)]
-        Conversations[(conversations_collection)]
-        Knowledge[(knowledge_base_collection)]
-    end
-    
-    %% Client to API
-    UI --> FastAPI
-    
-    %% API to Auth
-    FastAPI --> JWT
-    
-    %% API Routes
-    FastAPI --> AuthR
-    FastAPI --> ChatR
-    FastAPI --> CRMR
-    FastAPI --> UploadR
-    FastAPI --> ResetR
-    
-    %% Auth flow
-    JWT -.-> AuthR
-    JWT -.-> ChatR
-    JWT -.-> CRMR
-    JWT -.-> UploadR
-    JWT -.-> ResetR
-    
-    %% Routes to Services
-    AuthR --> DB
-    ChatR --> OpenAI
-    ChatR --> RAG
-    ChatR --> CRM
-    ChatR --> DB
-    CRMR --> CRM
-    CRMR --> DB
-    UploadR --> Helpers
-    UploadR --> RAG
-    UploadR --> DB
-    ResetR --> DB
-    
-    %% Services to External
-    OpenAI --> OpenAIAPI
-    DB --> MongoDB
-    RAG --> VectorDB
-    
-    %% File Processing
-    Helpers --> CSV
-    Helpers --> PDF
-    Helpers --> TXT
-    Helpers --> JSON
-    
-    %% Database Collections
-    MongoDB --> Users
-    MongoDB --> Conversations
-    MongoDB --> Knowledge
-    
-    %% Data Flow for Chat
-    ChatR -.->|1. Extract User Context| JWT
-    ChatR -.->|2. Get RAG Results| RAG
-    ChatR -.->|3. Generate Response| OpenAI
-    ChatR -.->|4. Save Conversation| DB
-    
-    %% Data Flow for Upload
-    UploadR -.->|1. Process File| Helpers
-    UploadR -.->|2. Clear Knowledge Base| DB
-    UploadR -.->|3. Insert Documents| Knowledge
-    UploadR -.->|4. Build Vector Store| RAG
-    
-    %% Styling
-    classDef client fill:#e1f5fe
-    classDef api fill:#f3e5f5
-    classDef service fill:#e8f5e8
-    classDef external fill:#fff3e0
-    classDef database fill:#fce4ec
-    
-    class UI client
-    class FastAPI,JWT api
-    class AuthR,ChatR,CRMR,UploadR,ResetR api
-    class OpenAI,RAG,CRM,DB service
-    class Helpers,CSV,PDF,TXT,JSON service
-    class OpenAIAPI,MongoDB,VectorDB external
-    class Users,Conversations,Knowledge database
+flowchart TB
+ subgraph subGraph0["Frontend Layer"]
+        Frontend["React Application<br>Port 5173"]
+  end
+ subgraph subGraph1["API Gateway"]
+        FastAPI["FastAPI Server<br>Port 8000<br>CORS Enabled"]
+        AuthCheck{"Auth Required?"}
+  end
+ subgraph subGraph2["Public Endpoints"]
+        Login["/auth/login"]
+        Register["/crm/create_user"]
+  end
+ subgraph subGraph3["Protected Endpoints"]
+        ChatEndpoint["/chat - AI Conversations"]
+        AuthRoutes["/auth/* - Token Management"]
+        UserProfile["/crm/user/* - User Management"]
+        UploadDocs["/upload_docs - File Upload"]
+        ResetMemory["/reset - Clear Memory"]
+  end
+ subgraph subGraph4["API Routes"]
+        subGraph2
+        subGraph3
+  end
+ subgraph subGraph5["Business Logic Layer"]
+        OpenAIService["OpenAI Service<br>GPT-4o-mini Integration"]
+        RAGService["RAG Service<br>Vector Search &amp; Retrieval"]
+        CRMService["CRM Service<br>User &amp; Conversation Management"]
+        DBService["Database Service<br>MongoDB Client"]
+        FileProcessor["File Processor<br>CSV, PDF, TXT, JSON"]
+  end
+ subgraph subGraph6["Data Layer"]
+        VectorStore["FAISS Vector Store<br>Local Cache"]
+        MongoDB["MongoDB Database<br>Users, Conversations, Knowledge"]
+        OpenAIAPI["OpenAI API<br>gpt-4o-mini"]
+  end
+    Frontend --> FastAPI
+    FastAPI --> AuthCheck
+    AuthCheck -- Public --> Login & Register
+    AuthCheck -- Protected + JWT --> ChatEndpoint & AuthRoutes & UserProfile & UploadDocs & ResetMemory
+    ChatEndpoint -- AI Response --> OpenAIService 
+    ChatEndpoint -- Vector Search --> RAGService 
+    ChatEndpoint -- Save Conversation --> CRMService
+    Login --> DBService
+    Register --> CRMService
+    AuthRoutes --> DBService
+    UserProfile --> CRMService
+    UploadDocs -- Process Files --> FileProcessor 
+    UploadDocs -- Rebuild Vectors --> RAGService
+    ResetMemory --> DBService
+    OpenAIService --> OpenAIAPI
+    RAGService --> VectorStore
+    CRMService --> DBService
+    DBService --> MongoDB
+    ChatEndpoint -. User Context .-> AuthCheck
+    %% ChatEndpoint -. Vector Search .-> RAGService
+    %% ChatEndpoint -. AI Response .-> OpenAIService
+    %% ChatEndpoint -. Save Conversation .-> CRMService
+    %% UploadDocs -. Process Files .-> FileProcessor
+    UploadDocs -. Update Knowledge .-> MongoDB
+    %% UploadDocs -. Rebuild Vectors .-> RAGService
+     Frontend:::frontend
+     FastAPI:::api
+     AuthCheck:::api
+     Login:::auth
+     Register:::auth
+     ChatEndpoint:::auth
+     AuthRoutes:::auth
+     UserProfile:::auth
+     UploadDocs:::auth
+     ResetMemory:::auth
+     OpenAIService:::service
+     RAGService:::service
+     CRMService:::service
+     DBService:::service
+     FileProcessor:::service
+     VectorStore:::data
+     MongoDB:::data
+     OpenAIAPI:::data
+    classDef frontend fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef api fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef auth fill:#ffebee,stroke:#b71c1c,stroke-width:2px
+    classDef service fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef data fill:#fff3e0,stroke:#e65100,stroke-width:2px
 ```
 
 ## System Components
@@ -135,31 +148,39 @@ graph TB
 
 ### 2. API Gateway
 - **FastAPI Server**: Main application server running on port 8000
+- **CORS Middleware**: Cross-origin resource sharing configuration
+
+### 3. Authentication Layer
 - **JWT Middleware**: Token verification for protected endpoints
+- **Authentication Check**: Determines if endpoint requires authentication
 
-### 3. API Routes
-- **Authentication Routes** (`/auth/*`): Login, user information
-- **Chat Routes** (`/chat`): AI conversations with RAG integration
-- **CRM Routes** (`/crm/*`): User profile management
-- **Upload Routes** (`/upload_docs/`): Document upload and processing
-- **Reset Routes** (`/reset`): Clear conversation memory
+### 4. Public Endpoints (No Authentication Required)
+- **Login Routes** (`/auth/login`): User authentication
+- **Registration Routes** (`/crm/create_user`): New user registration
 
-### 4. Services Layer
+### 5. Protected Endpoints (JWT Authentication Required)
+- **Chat Routes** (`/chat/*`): AI conversations with RAG integration
+- **Auth Management** (`/auth/me`, `/auth/verify`, `/auth/logout`): Token operations and authorization
+- **User Management** (`/crm/user/*`, `/crm/update_user/*`, `/crm/conversations/*`): Profile and conversation management
+- **File Upload** (`/upload_docs/`): Document upload and processing
+- **Reset Operations** (`/reset`): Clear conversation memory
+
+### 6. Services Layer
 - **OpenAI Service**: Integration with GPT-4o-mini for chat responses
 - **RAG Service**: FAISS vector store for retrieval-augmented generation
 - **CRM Service**: User profile and preference management
 - **Database Service**: MongoDB connection and operations
 
-### 5. Data Processing
+### 7. Data Processing
 - **helpers.py**: Centralized file processing utilities
 - **File Processors**: Support for CSV, PDF, TXT, JSON formats
 
-### 6. External Services
+### 8. External Services
 - **OpenAI API**: GPT-4o-mini for natural language processing
-- **MongoDB**: Document database for persistent storage
+- **MongoDB**: Document database
 - **FAISS Vector Store**: Local vector database for semantic search
 
-### 7. Database Collections
+### 9. Database Collections
 - **users_collection**: User profiles and preferences
 - **conversations_collection**: Chat history and metadata
 - **knowledge_base_collection**: RAG document store
@@ -183,10 +204,14 @@ graph TB
 6. Upload confirmation returned with vector store status
 
 ## Security Features
-- **JWT Authentication**: Secure token-based user authentication
-- **Token Verification**: All protected endpoints validate JWT tokens
-- **User Context Isolation**: Conversations linked to authenticated users
-- **File Type Validation**: Only allowed file formats accepted
+- **JWT Bearer Token Authentication**: Secure token-based user authentication
+- **Selective Authentication**: Public endpoints for login/registration, protected endpoints for user operations
+- **User Identity Verification**: Protected endpoints validate user can only access their own data
+- **Token Validation**: All protected endpoints verify JWT tokens via `verify_token` dependency
+- **User Context Isolation**: Conversations and profiles linked to authenticated users
+- **File Type Validation**: Only allowed file formats accepted for uploads
+- **Password Hashing**: bcrypt encryption for stored passwords
+- **HTTP-only Cookies**: Secure cookie storage for authentication tokens
 
 ## Scalability Considerations
 - **Stateless Design**: Each request is independent

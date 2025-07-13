@@ -22,7 +22,6 @@ def build_vectorstore_from_upload(documents):
     try:
         print(f"Building vector store from {len(documents)} uploaded documents...")
         
-        # convert uploaded documents to LangChain Document format
         docs = []
         for doc in documents:
             content = "\n".join([f"{k}: {v}" for k, v in doc.items() if k != "_id"])
@@ -56,10 +55,3 @@ def query_knowledge_base(query: str, k: int = 30):
     except Exception as e:
         print(f"Error querying knowledge base: {e}")
         return "Error accessing knowledge base."
-
-# def get_vector_store_status():
-#     return {
-#         "loaded": vector_store_loaded,
-#         "available": vector_store is not None,
-#         "document_count": collection.count_documents({}) if collection else 0
-#     }

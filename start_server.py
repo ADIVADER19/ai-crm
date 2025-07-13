@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 def main():
     load_dotenv()
     
-    print("=== AI CRM Chatbot Startup ===")
+    print("=== RentRadar Chatbot Startup ===")
     print("Initializing database connections...")
 
     from services.db_service import client

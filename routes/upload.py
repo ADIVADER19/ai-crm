@@ -12,7 +12,6 @@ async def upload_docs(
     user_id: str = Depends(verify_token)
 ):
     try:
-        # check file extension
         allowed_extensions = ['.pdf', '.txt', '.csv', '.json']
         file_extension = None
         for ext in allowed_extensions:
@@ -29,7 +28,6 @@ async def upload_docs(
         contents = await file.read()
         documents = []
         
-        # process based on file type
         if file_extension == '.csv':
             csv_content = contents.decode('utf-8')
             documents = process_csv_content(csv_content)
@@ -49,15 +47,12 @@ async def upload_docs(
                 raise HTTPException(status_code=400, detail=str(e))
         
         if documents:
-            # clear existing knowledge base
             knowledge_base_collection.delete_many({})
             print(f"Cleared existing knowledge base")
             
-            # insert new documents
             result = knowledge_base_collection.insert_many(documents)
             print(f"Inserted {len(documents)} new documents")
             
-            # build vector store from the uploaded documents
             vector_store_success = rag.build_vectorstore_from_upload(documents)
             
             if vector_store_success:

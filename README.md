@@ -1,4 +1,4 @@
-# AI CRM Chatbot
+# RentRadar Chatbot
 
 A sophisticated AI-powered CRM chatbot system built with FastAPI, OpenAI GPT, and RAG (Retrieval-Augmented Generation) capabilities for real estate property management.
 
@@ -17,6 +17,7 @@ A sophisticated AI-powered CRM chatbot system built with FastAPI, OpenAI GPT, an
 
 ```
 ai-crm-chatbot/
+├── ai-crm-frontend         # react based frontend (to set up read it's README)
 ├── main.py                 # FastAPI application entry point
 ├── helpers.py              # Some helper functions used throughout the application
 ├── start_server.py         # Server startup script

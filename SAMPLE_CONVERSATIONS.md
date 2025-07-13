@@ -1,4 +1,4 @@
-# AI CRM Chatbot - Sample Conversation Logs
+# RentRadar Chatbot - Sample Conversation Logs
 
 ## Test Scenario: Real Estate Property Search
 
@@ -89,52 +89,3 @@
   ]
 }
 ```
-
-## System Behavior Analysis
-
-### 1. User Context Integration
-- **Personalization**: All responses reference user's company (XYZ Real Estate Group)
-- **Preference Matching**: Consistent mention of Times Square preference and $90,000 budget
-- **Professional Tone**: Responses tailored for real estate professional
-
-### 2. RAG Integration Quality  
-- **Specific Data**: Exact addresses, prices, and square footage from knowledge base
-- **Contextual Relevance**: Properties match user's stated preferences
-- **Accurate Calculations**: Correct per-square-foot pricing computations
-
-### 3. Category Classification
-- **Property Search**: Queries about specific properties or locations
-- **General Inquiry**: Questions about data coverage and capabilities  
-- **Pricing Inquiry**: Market analysis and pricing information requests
-
-### 4. Response Time Performance
-- **Average Response Time**: ~1000ms including RAG retrieval and OpenAI generation
-- **Range**: 756ms - 1245ms depending on query complexity
-- **Consistency**: All responses include response_time_ms metadata
-
-### 5. Conversation Memory
-- **Context Preservation**: Follow-up questions reference previous context
-- **User Profile Consistency**: Name, company, preferences maintained across conversations
-- **Session Continuity**: Natural conversation flow with contextual awareness
-
-## Technical Validation
-
-### Authentication Flow
-✅ JWT token required for all chat endpoints  
-✅ User context extracted from token payload  
-✅ Responses personalized with user information
-
-### RAG Performance  
-✅ Vector search retrieves relevant property data  
-✅ Knowledge base integration provides specific details  
-✅ Semantic matching works for various query types
-
-### Database Operations
-✅ Conversations saved with proper user_id linkage  
-✅ Category classification applied automatically  
-✅ Response metadata captured accurately
-
-### Error Handling
-✅ Graceful handling of edge cases  
-✅ Appropriate fallbacks when RAG data unavailable  
-✅ Consistent JSON response format

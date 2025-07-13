@@ -43,13 +43,10 @@ async def chat(
             detail="Message cannot be empty"
         )
 
-    try:# detect category
+    try:
         ai_response, detected_category = generate_response(user_id, chat_message.message, user_details)
-        #finalize category
         final_category = should_use_existing_category(user_id, detected_category)
-        # find or make conversation
         conversation_id = get_or_create_active_conversation(user_id, final_category)        
-        # add messages to conversation
         add_message_to_conversation(conversation_id, chat_message.message, ai_response)
 
         response_time_ms = round((time.time() - start_time) * 1000, 2)
@@ -69,7 +66,6 @@ async def chat(
 
 @router.get("/categories")
 async def get_categories(user_id: str = Depends(verify_token)):
-# get conversation categories for the user
     try:
         categories = get_conversation_categories(user_id)
         return {"user_id": user_id, "categories": categories}

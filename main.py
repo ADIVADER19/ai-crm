@@ -2,9 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import chat, crm, auth, reset, upload
 
-app = FastAPI(title="AI CRM Chatbot", version="1.0.0")
+app = FastAPI(title="RentRadar Chatbot", version="1.0.0")
 
-# Add CORS middleware to allow cookies
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://localhost:5173"],  

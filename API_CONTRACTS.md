@@ -1,4 +1,4 @@
-# AI CRM Chatbot - API Contracts
+# RentRadar Chatbot - API Contracts
 
 ## Base URL
 ```
@@ -279,20 +279,8 @@ file: <binary_file_data>
 
 ## Sample Usage Flow
 
-1. **Login**: `POST /auth/login` → Get JWT token
-2. **Upload Data**: `POST /upload_docs/` → Upload CSV with property data
-3. **Chat**: `POST /chat` → Send messages and get AI responses
-4. **Update Profile**: `PUT /crm/update_user/{user_id}` → Set preferences
-5. **View History**: `GET /crm/conversations/{user_id}` → See past conversations
-
----
-
-## Features
-
-- **JWT Authentication**: Secure token-based authentication
-- **RAG Integration**: Retrieval-Augmented Generation with vector search
-- **Conversation Memory**: Full chat history persistence
-- **User Personalization**: Responses based on user preferences and company
-- **Multi-format Upload**: Support for PDF, TXT, CSV, JSON files
-- **Real-time Processing**: Response time metadata included
-- **Category Classification**: Automatic conversation categorization
+1. **Login**: `POST /auth/login` : Get JWT token
+2. **Upload Data**: `POST /upload_docs/` : Upload CSV with property data
+3. **Chat**: `POST /chat` : Send messages and get AI responses
+4. **Update Profile**: `PUT /crm/update_user/{user_id}` : Set preferences
+5. **View History**: `GET /crm/conversations/{user_id}` : See past conversations

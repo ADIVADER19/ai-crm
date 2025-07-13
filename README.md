@@ -18,18 +18,18 @@ A sophisticated AI-powered CRM chatbot system built with FastAPI, OpenAI GPT, an
 ```
 ai-crm-chatbot/
 ├── main.py                 # FastAPI application entry point
+├── helpers.py              # Some helper functions used throughout the application
 ├── start_server.py         # Server startup script
-├── chat.py                 # Standalone chat client for testing
 ├── requirements.txt        # Python dependencies
 ├── .env                    # Environment variables
 ├── HackathonInternalKnowledgeBase.csv  # Sample property data
 ├── models/
 │   ├── user.py            # User data models
-│   └── conversation.py    # Chat data models
 ├── routes/
 │   ├── auth.py            # Authentication endpoints
 │   ├── chat.py            # Chat endpoints
 │   ├── crm.py             # CRM endpoints
+|   ├── reset.py           # Reset endpoint
 │   └── upload.py          # File upload endpoints
 ├── services/
 │   ├── db_service.py      # Database connection
@@ -105,20 +105,6 @@ ai-crm-chatbot/
 - **Sample Conversations**: See `SAMPLE_CONVERSATIONS.md` for example interactions and testing scenarios
 
 ## Usage
-
-### Using the Chat Client
-
-Run the standalone chat client for testing:
-
-```bash
-python chat.py
-```
-
-This will guide you through:
-1. Creating a user account
-2. Starting a chat session
-3. Asking questions about properties
-4. Viewing conversation history
 
 ### API Endpoints
 
@@ -206,76 +192,22 @@ curl -X POST "http://localhost:8000/upload_docs/" \
 5. OpenAI generates response using enriched context
 6. Response is saved to conversation history
 
-## Development
-
-### Adding New Features
-
-1. **New API Endpoints**: Add routes in `routes/` directory
-2. **Business Logic**: Implement in `services/` directory
-3. **Data Models**: Define in `models/` directory
-4. **Database Changes**: Update collections in `services/db_service.py`
-
 ### Testing
 
 Test the API using:
 - Interactive docs at `/docs`
-- Command-line chat client: `python chat.py`
 - API testing tools like Postman or curl
 
 ## Configuration
 
 ### Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `OPENAI_API_KEY` | OpenAI API key for GPT access | Yes |
-| `MONGO_URI` | MongoDB connection string | Yes |
-| `JWT_SECRET_KEY` | Secret key for JWT tokens | No (has default) |
+`OPENAI_API_KEY` : OpenAI API key for GPT access 
+`MONGO_URI`      : MongoDB connection string     
+`JWT_SECRET_KEY` : Secret key for JWT tokens 
 
 ### MongoDB Collections
 
 - `users`: User account information
 - `conversations`: Chat history and messages
 - `knowledge_base`: Property data for RAG search
-
-## Troubleshooting
-
-### Common Issues
-
-1. **MongoDB Connection Error**
-   - Check your `MONGO_URI` in `.env`
-   - Ensure MongoDB is running
-   - Verify network access to MongoDB Atlas
-
-2. **OpenAI API Error**
-   - Verify `OPENAI_API_KEY` is correct
-   - Check API quota and billing
-   - Ensure internet connectivity
-
-3. **Import Errors**
-   - Run `pip install -r requirements.txt`
-   - Check Python version (3.8+ required)
-
-4. **Vector Store Build Error**
-   - Ensure knowledge base collection has data
-   - Check MongoDB connection
-   - Verify OpenAI embeddings are accessible
-
-## License
-
-This project is licensed under the MIT License.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## Support
-
-For issues and questions:
-1. Check the troubleshooting section
-2. Review API documentation at `/docs`
-3. Create an issue in the repository

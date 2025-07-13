@@ -156,7 +156,7 @@ graph TB
 
 ### 6. External Services
 - **OpenAI API**: GPT-4o-mini for natural language processing
-- **MongoDB**: Document database for persistent storage
+- **MongoDB**: Document database for 
 - **FAISS Vector Store**: Local vector database for semantic search
 
 ### 7. Database Collections
@@ -188,8 +188,3 @@ graph TB
 - **User Context Isolation**: Conversations linked to authenticated users
 - **File Type Validation**: Only allowed file formats accepted
 
-## Scalability Considerations
-- **Stateless Design**: Each request is independent
-- **Microservice Architecture**: Services are loosely coupled
-- **Vector Store Rebuilds**: Efficient FAISS operations
-- **Database Indexing**: MongoDB collections optimized for queries

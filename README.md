@@ -44,7 +44,7 @@ ai-crm-chatbot/
 
 ### Prerequisites
 
-- Python 3.8+
+- Python 3.10+
 - MongoDB Atlas account or local MongoDB
 - OpenAI API key
 
@@ -137,9 +137,11 @@ ai-crm-chatbot/
 curl -X POST "http://localhost:8000/crm/create_user" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "John Doe",
-    "email": "john@example.com",
-    "company": "ABC Real Estate"
+  "name": "Gojo saturo",
+  "email": "gojo@example.com",
+  "company": "ABC Real Estate",
+  "preferences": "Looking for Manhattan properties under $2500/month",
+  "password":"123"
   }'
 ```
 
@@ -204,7 +206,8 @@ Test the API using:
 
 `OPENAI_API_KEY` : OpenAI API key for GPT access 
 `MONGO_URI`      : MongoDB connection string     
-`JWT_SECRET_KEY` : Secret key for JWT tokens 
+`SECRET_KEY` : Secret key for JWT tokens 
+`ALGORITHM` : Hashing algorithm for token
 
 ### MongoDB Collections
 

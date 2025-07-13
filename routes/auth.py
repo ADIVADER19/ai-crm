@@ -27,9 +27,10 @@ class UserResponse(BaseModel):
     user_id: str
     email: str
     name: Optional[str] = None
+    company: Optional[str] = None
+    preferences: Optional[str] = None
 
 def verify_password(password: str, hashed: str) -> bool:
-    """Verify password against hash"""
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -75,13 +76,12 @@ def login(login_request: LoginRequest, response: Response):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     access_token = create_access_token(data={"sub": str(user["_id"])})
     
-    # Set cookie in response
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,
         secure=False,
-        samesite="lax",
+        samesite="none",
         max_age=86400
     )
     

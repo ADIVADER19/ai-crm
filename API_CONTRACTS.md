@@ -29,8 +29,13 @@ Authorization: Bearer <your_jwt_token>
 **Response**:
 ```json
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "token_type": "bearer"
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODcxZjE0Mjc2M2E1NTU0OTBhNzQ0OTYiLCJleHAiOjE3NTI1MDkxMzZ9.W7owhtxaNZI5d46CVjlAhKIb4zsenL1JNoaelSgP8ic",
+    "token_type": "bearer",
+    "user": {
+        "id": "6871f142763a555490a74496",
+        "email": "soham@example.com",
+        "name": "Soham"
+    }
 }
 ```
 
@@ -130,17 +135,26 @@ file: <binary_file_data>
 **Request Body**:
 ```json
 {
-  "name": "John Doe",
-  "email": "john@example.com",
+  "name": "Gojo saturo",
+  "email": "gojo@example.com",
   "company": "ABC Real Estate",
-  "preferences": "Looking for Manhattan properties, budget $150k/month"
+  "preferences": "Looking for Manhattan properties under $2500/month",
+  "password":"your password here"
 }
 ```
 
 **Response**:
 ```json
 {
-  "user_id": "6871f142763a555490a74497"
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODczZDk5ZjA0NWNjNjhkNzg1OTM2NGEiLCJleHAiOjE3NTI1MDkyMTV9.aAkzATgLVg-39sBtgcFP__O3XJxJ2sfp3zveHCZ6eJ4",
+    "token_type": "bearer",
+    "user": {
+        "id": "6873d99f045cc68d7859364a",
+        "name": "John doe",
+        "email": "john@example.com",
+        "company": "ABC Real Estate",
+        "preferences": "Looking for Manhattan properties under $2500/month"
+    }
 }
 ```
 
@@ -163,7 +177,8 @@ file: <binary_file_data>
     "name": "Soham",
     "email": "soham@example.com",
     "company": "XYZ Real Estate Group",
-    "preferences": "Updated: Looking for timesquare properties, budget increased to $90000/month"
+    "preferences": "Updated: Looking for timesquare properties, budget increased to $90000/month",
+    "password:":<HashPassword>
   }
 }
 ```
@@ -178,7 +193,8 @@ file: <binary_file_data>
     "name": "Soham",
     "email": "soham@example.com",
     "company": "XYZ Real Estate Group",
-    "preferences": "Updated: Looking for timesquare properties, budget increased to $90000/month"
+    "preferences": "Updated: Looking for timesquare properties, budget increased to $90000/month",
+    "password":<Hashed Password>
   }
 }
 ```

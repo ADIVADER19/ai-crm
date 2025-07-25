@@ -3,6 +3,8 @@ from langchain_community.vectorstores import FAISS
 from langchain.schema import Document
 from pymongo import MongoClient
 import os
+import pandas as pd
+from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,6 +14,7 @@ client = MongoClient(MONGO_URI)
 collection = client["rentbot"]["knowledge_base"]
 
 embeddings = OpenAIEmbeddings()
+VECTOR_STORE_PATH = "cache/vector_store"
 
 vector_store = None
 vector_store_loaded = False
@@ -29,8 +32,14 @@ def build_vectorstore_from_upload(documents):
 
         if docs:
             vector_store = FAISS.from_documents(docs, embeddings)
+            
+            # Ensure cache directory exists
+            os.makedirs(VECTOR_STORE_PATH, exist_ok=True)
+            
+            # Save to disk for persistence
+            vector_store.save_local(VECTOR_STORE_PATH)
             vector_store_loaded = True
-            print(f"Vector store built successfully with {len(docs)} documents")
+            print(f"Vector store built and saved with {len(docs)} documents")
             return True
         else:
             print("No valid documents found for vector store")
@@ -46,7 +55,10 @@ def query_knowledge_base(query: str, k: int = 30):
     global vector_store, vector_store_loaded
     
     try:
-        # check if vector store is available
+        # Check if vector store is available, try to load if not
+        if not vector_store_loaded or vector_store is None:
+            initialize_vector_store()
+            
         if not vector_store_loaded or vector_store is None:
             return "No knowledge base available. Please upload documents first using /upload/upload_docs."
         
@@ -55,3 +67,60 @@ def query_knowledge_base(query: str, k: int = 30):
     except Exception as e:
         print(f"Error querying knowledge base: {e}")
         return "Error accessing knowledge base."
+
+def initialize_vector_store():
+    """Initialize vector store on server startup - load from cache or build from CSV"""
+    global vector_store, vector_store_loaded
+    
+    try:
+        # First, try to load existing vector store from disk
+        if os.path.exists(VECTOR_STORE_PATH) and os.path.exists(os.path.join(VECTOR_STORE_PATH, "index.faiss")):
+            print("Loading existing vector store from cache...")
+            vector_store = FAISS.load_local(
+                VECTOR_STORE_PATH, 
+                embeddings, 
+                allow_dangerous_deserialization=True
+            )
+            vector_store_loaded = True
+            print("Vector store loaded successfully from cache")
+            return True
+            
+        # If no cached vector store, build from CSV
+        print("No cached vector store found. Building from HackathonInternalKnowledgeBase.csv...")
+        csv_path = "HackathonInternalKnowledgeBase.csv"
+        
+        if not os.path.exists(csv_path):
+            print(f"Warning: {csv_path} not found. Vector store will be empty until documents are uploaded.")
+            return False
+            
+        # Read CSV and build vector store
+        df = pd.read_csv(csv_path)
+        print(f"Found {len(df)} records in CSV file")
+        
+        docs = []
+        for _, row in df.iterrows():
+            # Convert row to text content
+            content = "\n".join([f"{col}: {val}" for col, val in row.items() if pd.notna(val)])
+            docs.append(Document(page_content=content))
+        
+        if docs:
+            print(f"Building vector store from {len(docs)} CSV records...")
+            vector_store = FAISS.from_documents(docs, embeddings)
+            
+            # Ensure cache directory exists
+            os.makedirs(VECTOR_STORE_PATH, exist_ok=True)
+            
+            # Save to disk for future use
+            vector_store.save_local(VECTOR_STORE_PATH)
+            vector_store_loaded = True
+            print(f"Vector store built and cached successfully with {len(docs)} documents")
+            return True
+        else:
+            print("No valid documents found in CSV")
+            return False
+            
+    except Exception as e:
+        print(f"Error initializing vector store: {e}")
+        vector_store = None
+        vector_store_loaded = False
+        return False

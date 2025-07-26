@@ -41,6 +41,14 @@ const Navbar = () => {
             >
               👤 Profile
             </Link>
+            {user?.role === 'admin' && (
+              <Link 
+                to="/admin" 
+                className={`nav-link admin-link ${isActive('/admin') ? 'active' : ''}`}
+              >
+                🛠️ Admin
+              </Link>
+            )}
           </div>
 
           <div className="navbar-user">

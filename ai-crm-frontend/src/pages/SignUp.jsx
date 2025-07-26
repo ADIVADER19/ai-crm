@@ -10,7 +10,8 @@ const SignUp = () => {
     email: '',
     password: '',
     company: '',
-    preferences: ''
+    preferences: '',
+    phone: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,7 +31,7 @@ const SignUp = () => {
     setSuccess('');
 
     try {
-      const response = await crmAPI.createUser(formData);
+      await crmAPI.createUser(formData);
       setSuccess('Account created successfully! Please login with your credentials.');
       setTimeout(() => {
         navigate('/login');
@@ -100,6 +101,18 @@ const SignUp = () => {
               value={formData.company}
               onChange={handleChange}
               placeholder="Enter your company name"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="phone">Phone Number</label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="Enter your phone number"
             />
           </div>
 

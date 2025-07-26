@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from services.db_service import knowledge_base_collection
-from routes.auth import verify_token
+from routes.auth import verify_admin_token
 from helpers import process_csv_content, process_pdf_content, process_txt_content, process_json_content
 import services.rag_service as rag
 
@@ -9,7 +9,7 @@ router = APIRouter(prefix="/upload_docs")
 @router.post("/")
 async def upload_docs(
     file: UploadFile = File(...),
-    user_id: str = Depends(verify_token)
+    user_id: str = Depends(verify_admin_token)
 ):
     try:
         allowed_extensions = ['.pdf', '.txt', '.csv', '.json']

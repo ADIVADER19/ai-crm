@@ -10,7 +10,8 @@ const Profile = () => {
     name: '',
     email: '',
     company: '',
-    preferences: ''
+    preferences: '',
+    phone: ''
   });
   const [conversations, setConversations] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -169,6 +170,18 @@ const Profile = () => {
                 value={profileData.company}
                 onChange={handleInputChange}
                 placeholder="Enter your company name"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="phone">Phone Number</label>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                value={profileData.phone}
+                onChange={handleInputChange}
+                placeholder="Enter your phone number"
               />
             </div>
 

@@ -70,6 +70,21 @@
   background: #eef2ff;
 }
 
+.nav-link.admin-link {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.nav-link.admin-link:hover {
+  color: #c82333;
+  background: #f8d7da;
+}
+
+.nav-link.admin-link.active {
+  color: #dc3545;
+  background: #f5c6cb;
+}
+
 .navbar-user {
   display: flex;
   align-items: center;

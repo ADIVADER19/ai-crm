@@ -21,7 +21,10 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           const userData = await authAPI.getMe();
-          setUser(userData);
+          setUser({
+            ...userData,
+            role: userData.role || 'user' // Ensure role is included
+          });
         } catch (error) {
           console.error('Auth initialization failed:', error);
           localStorage.removeItem('token');
@@ -43,7 +46,10 @@ export const AuthProvider = ({ children }) => {
       setToken(access_token);
       
       const userData = await authAPI.getMe();
-      setUser(userData);
+      setUser({
+        ...userData,
+        role: userData.role || 'user' // Ensure role is included
+      });
       
       return { success: true };
     } catch (error) {

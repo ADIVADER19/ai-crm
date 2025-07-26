@@ -135,20 +135,22 @@ const Chat = () => {
       <div className="chat-header">
         <h1>RentRadar Chat</h1>
         <div className="header-actions">
-          <button 
-            onClick={() => setShowUpload(!showUpload)} 
-            className="upload-toggle-button"
-            disabled={uploadLoading}
-          >
-            📁 Upload Docs
-          </button>
+          {user?.role === 'admin' && (
+            <button 
+              onClick={() => setShowUpload(!showUpload)} 
+              className="upload-toggle-button"
+              disabled={uploadLoading}
+            >
+              📁 Upload Docs
+            </button>
+          )}
           <button onClick={handleReset} className="reset-button">
             🔄 Reset Chat
           </button>
         </div>
       </div>
 
-      {showUpload && (
+      {showUpload && user?.role === 'admin' && (
         <div className="upload-section">
           <div className="upload-content">
             <h3>📤 Upload Knowledge Base Documents</h3>

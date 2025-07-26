@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Chat from './pages/Chat';
 import Profile from './pages/Profile';
+import AdminDashboard from './pages/AdminDashboard';
 import './App.css';
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
               <Route index element={<Navigate to="/chat" replace />} />
               <Route path="chat" element={<Chat />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="admin" element={<AdminDashboard />} />
             </Route>
             {/* Redirect */}
             <Route path="*" element={<Navigate to="/chat" replace />} />

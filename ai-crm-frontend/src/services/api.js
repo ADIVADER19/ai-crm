@@ -70,6 +70,23 @@ export const crmAPI = {
   getConversations: async (userId) => {
     const response = await api.get(`/crm/conversations/${userId}`);
     return response.data;
+  },
+
+  // Admin endpoints
+  getAllUsers: async (queryParams = '') => {
+    const url = queryParams ? `/crm/admin/users?${queryParams}` : '/crm/admin/users';
+    const response = await api.get(url);
+    return response.data;
+  },
+  
+  updateUserRole: async (userId, role) => {
+    const response = await api.put(`/crm/admin/users/${userId}/role?role=${role}`);
+    return response.data;
+  },
+  
+  getUserById: async (userId) => {
+    const response = await api.get(`/crm/admin/users/${userId}`);
+    return response.data;
   }
 };
 

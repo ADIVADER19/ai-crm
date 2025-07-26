@@ -29,6 +29,7 @@ class UserResponse(BaseModel):
     name: Optional[str] = None
     company: Optional[str] = None
     preferences: Optional[str] = None
+    role: Optional[str] = "user"
 
 def verify_password(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
@@ -37,6 +38,24 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
         token = credentials.credentials
         user_id = verify_token_payload(token)
+        return user_id
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+def verify_admin_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        token = credentials.credentials
+        user_id = verify_token_payload(token)
+        
+        user = get_user(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        if user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
         return user_id
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token has expired")
@@ -58,7 +77,8 @@ def get_user_from_token(credentials: HTTPAuthorizationCredentials = Depends(secu
             "email": user.get("email", ""),
             "name": user.get("name", ""),
             "company": user.get("company", ""),
-            "preferences": user.get("preferences", "")
+            "preferences": user.get("preferences", ""),
+            "role": user.get("role", "user")
         }
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token has expired")
@@ -90,7 +110,8 @@ def login(login_request: LoginRequest, response: Response):
         user={
             "id": str(user["_id"]),
             "email": user["email"],
-            "name": user.get("name", "")
+            "name": user.get("name", ""),
+            "role": user.get("role", "user")
         }
     )
 
@@ -107,7 +128,8 @@ def get_current_user(user_id: str = Depends(verify_token)):
     return UserResponse(
         user_id=str(user["_id"]),
         email=user.get("email", ""),
-        name=user.get("name")
+        name=user.get("name"),
+        role=user.get("role", "user")
     )
 
 @router.post("/logout")

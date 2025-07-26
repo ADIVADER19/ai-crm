@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import chat, crm, auth, reset, upload
 from services.rag_service import initialize_vector_store
+import os
 
 app = FastAPI(title="RentRadar Chatbot", version="1.0.0")
 
@@ -12,9 +13,25 @@ async def startup_event():
     initialize_vector_store()
     print("✅ Server startup complete!")
 
+# Configure CORS for deployment
+allowed_origins = [
+    "http://localhost:3000",  # React development
+    "http://localhost:5173",  # Vite development
+    "http://localhost:4173",  # Vite preview
+]
+
+# Add production frontend URLs if environment variables are set
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    allowed_origins.append(frontend_url)
+
+# For Render deployment, allow all origins in development (you should restrict this in production)
+if os.getenv("RENDER"):
+    allowed_origins = ["*"]  # In production, replace with your actual frontend domain
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],  
+    allow_origins=allowed_origins,
     allow_credentials=True,  
     allow_methods=["*"],
     allow_headers=["*"],

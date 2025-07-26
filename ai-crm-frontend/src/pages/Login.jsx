@@ -1,20 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import GoogleOAuth from '../components/GoogleOAuth';
 import './Auth.css';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login, firebaseAuth } = useAuth();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [loading, setLoading] = useState(false);
-  const [firebaseLoading, setFirebaseLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleChange = (e) => {
@@ -38,44 +35,6 @@ const Login = () => {
     }
     
     setLoading(false);
-  };
-
-  // Firebase Email/Password Login
-  const handleFirebaseLogin = async (e) => {
-    e.preventDefault();
-    setFirebaseLoading(true);
-    setError('');
-
-    try {
-      // Sign in with Firebase
-      const userCredential = await signInWithEmailAndPassword(
-        auth, 
-        formData.email, 
-        formData.password
-      );
-
-      // Get Firebase ID token
-      const idToken = await userCredential.user.getIdToken();
-
-      // Authenticate with backend
-      const authResult = await firebaseAuth(idToken, 'user');
-
-      if (authResult.success) {
-        // Navigate based on user role
-        if (authResult.user?.role === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate('/chat');
-        }
-      } else {
-        throw new Error(authResult.error);
-      }
-    } catch (error) {
-      console.error('Firebase login error:', error);
-      setError(error.message || 'Failed to sign in with Firebase');
-    } finally {
-      setFirebaseLoading(false);
-    }
   };
 
   const handleGoogleSuccess = (result) => {
@@ -151,21 +110,6 @@ const Login = () => {
           >
             {loading ? 'Signing In...' : 'Sign In'}
           </button>
-
-          {/* Firebase Email/Password Login */}
-          <button 
-            type="button"
-            onClick={handleFirebaseLogin}
-            className="auth-button"
-            disabled={firebaseLoading}
-            style={{
-              backgroundColor: '#4285f4',
-              color: 'white',
-              marginTop: '10px'
-            }}
-          >
-            {firebaseLoading ? 'Firebase Signing In...' : 'Sign In with Firebase'}
-          </button>
         </form>
 
         <div className="auth-footer">
@@ -173,12 +117,6 @@ const Login = () => {
             Don't have an account? 
             <Link to="/signup" className="auth-link"> Sign Up</Link>
           </p>
-        </div>
-
-        <div className="demo-credentials">
-          <h4>Demo Credentials:</h4>
-          <p><strong>Email:</strong> soham@example.com</p>
-          <p><strong>Password:</strong> 123</p>
         </div>
       </div>
     </div>

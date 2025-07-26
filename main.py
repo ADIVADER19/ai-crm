@@ -18,6 +18,7 @@ allowed_origins = [
     "http://localhost:3000",  # React development
     "http://localhost:5173",  # Vite development
     "http://localhost:4173",  # Vite preview
+    "https://rentradarassist.vercel.app/"
 ]
 
 # Add production frontend URLs if environment variables are set

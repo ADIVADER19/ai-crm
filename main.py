@@ -18,7 +18,7 @@ allowed_origins = [
     "http://localhost:3000",  # React development
     "http://localhost:5173",  # Vite development
     "http://localhost:4173",  # Vite preview
-    "https://rentradarassist.vercel.app/"
+    "https://rentradarassist.vercel.app"
 ]
 
 # Add production frontend URLs if environment variables are set
@@ -26,9 +26,9 @@ frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
     allowed_origins.append(frontend_url)
 
-# For Render deployment, allow all origins in development (you should restrict this in production)
+# For production deployment
 if os.getenv("RENDER"):
-    allowed_origins = ["*"]  # In production, replace with your actual frontend domain
+    allowed_origins = ["*"]  # Allow all origins in production
 
 app.add_middleware(
     CORSMiddleware,

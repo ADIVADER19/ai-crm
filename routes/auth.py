@@ -29,12 +29,19 @@ class TokenResponse(BaseModel):
     user: dict
 
 class UserResponse(BaseModel):
-    user_id: str
+    id: str
     email: str
     name: Optional[str] = None
     company: Optional[str] = None
     preferences: Optional[str] = None
     role: Optional[str] = "user"
+    picture: Optional[str] = None
+    phone: Optional[str] = None
+    email_verified: Optional[bool] = False
+    provider: Optional[str] = None
+    auth_provider: Optional[str] = None
+    created_at: Optional[str] = None
+    last_login: Optional[str] = None
 
 def verify_password(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
@@ -150,28 +157,41 @@ def firebase_auth(auth_request: FirebaseAuthRequest, response: Response):
     else:
         # For regular users - create account if doesn't exist
         if not user:
-            # Create new user account
+            # Create new user account with same structure as normal signup
             new_user = {
-                "email": firebase_user["email"],
                 "name": firebase_user["name"],
-                "firebase_uid": firebase_user["firebase_uid"],
-                "picture": firebase_user.get("picture", ""),
+                "email": firebase_user["email"],
+                "company": "",  # Empty string like normal signup default
+                "preferences": "",  # Empty string like normal signup default
                 "role": "user",
-                "auth_provider": "firebase"
+                "phone": "",  # Empty string like normal signup default
+                "firebase_uid": firebase_user["firebase_uid"],  # Add for Firebase linking
+                "auth_provider": "firebase"  # Track auth method
             }
             result = users_collection.insert_one(new_user)
             user = users_collection.find_one({"_id": result.inserted_id})
+            print(f"✅ Created new Google user: {firebase_user['email']}")
         else:
-            # Update existing user with Firebase info
+            # Update existing user with Firebase UID if not set
+            update_data = {}
+            
+            # Update Firebase UID if not present
             if not user.get("firebase_uid"):
+                update_data["firebase_uid"] = firebase_user["firebase_uid"]
+                update_data["auth_provider"] = "firebase"
+                
+            # Update name if it's empty or different
+            if not user.get("name") or user.get("name") != firebase_user.get("name"):
+                update_data["name"] = firebase_user["name"]
+            
+            if update_data:
                 users_collection.update_one(
                     {"_id": user["_id"]},
-                    {"$set": {
-                        "firebase_uid": firebase_user["firebase_uid"], 
-                        "picture": firebase_user.get("picture", ""),
-                        "auth_provider": "firebase"
-                    }}
+                    {"$set": update_data}
                 )
+                user = users_collection.find_one({"_id": user["_id"]})
+            
+            print(f"✅ Updated existing user login: {firebase_user['email']}")
     
     # Create access token
     access_token = create_access_token(data={"sub": str(user["_id"])})
@@ -193,7 +213,14 @@ def firebase_auth(auth_request: FirebaseAuthRequest, response: Response):
             "email": user["email"],
             "name": user.get("name", ""),
             "role": user.get("role", "user"),
-            "picture": user.get("picture", "")
+            "picture": user.get("picture", ""),
+            "email_verified": user.get("email_verified", False),
+            "provider": user.get("provider", ""),
+            "auth_provider": user.get("auth_provider", ""),
+            "company": user.get("company", ""),
+            "phone": user.get("phone", ""),
+            "created_at": str(user.get("created_at", "")),
+            "last_login": str(user.get("last_login", ""))
         }
     )
 
@@ -208,10 +235,19 @@ def get_current_user(user_id: str = Depends(verify_token)):
         raise HTTPException(status_code=404, detail="User not found")
     
     return UserResponse(
-        user_id=str(user["_id"]),
+        id=str(user["_id"]),
         email=user.get("email", ""),
         name=user.get("name"),
-        role=user.get("role", "user")
+        role=user.get("role", "user"),
+        picture=user.get("picture", ""),
+        company=user.get("company", ""),
+        phone=user.get("phone", ""),
+        preferences=user.get("preferences", ""),
+        email_verified=user.get("email_verified", False),
+        provider=user.get("provider", ""),
+        auth_provider=user.get("auth_provider", ""),
+        created_at=str(user.get("created_at", "")),
+        last_login=str(user.get("last_login", ""))
     )
 
 @router.post("/logout")

@@ -6,6 +6,15 @@ import { useAuth } from '../contexts/AuthContext';
 const GoogleOAuth = ({ userType = 'user', onSuccess, onError, buttonText }) => {
   const { firebaseAuth } = useAuth();
 
+  // Configure Google provider to request additional user information
+  React.useEffect(() => {
+    googleProvider.addScope('profile');
+    googleProvider.addScope('email');
+    googleProvider.setCustomParameters({
+      prompt: 'select_account'
+    });
+  }, []);
+
   const handleGoogleLogin = async () => {
     try {
       // Try popup first, fallback to redirect on mobile
@@ -23,6 +32,16 @@ const GoogleOAuth = ({ userType = 'user', onSuccess, onError, buttonText }) => {
 
       // Get Firebase ID token
       const idToken = await result.user.getIdToken();
+      
+      // Log user details for debugging
+      console.log('Google user details:', {
+        uid: result.user.uid,
+        email: result.user.email,
+        displayName: result.user.displayName,
+        photoURL: result.user.photoURL,
+        emailVerified: result.user.emailVerified,
+        metadata: result.user.metadata
+      });
       
       // Try as user first, then as admin if that fails and userType allows it
       let authResult = await firebaseAuth(idToken, 'user');
@@ -54,6 +73,15 @@ const GoogleOAuth = ({ userType = 'user', onSuccess, onError, buttonText }) => {
         const result = await getRedirectResult(auth);
         if (result) {
           const idToken = await result.user.getIdToken();
+          
+          // Log user details for debugging
+          console.log('Google redirect user details:', {
+            uid: result.user.uid,
+            email: result.user.email,
+            displayName: result.user.displayName,
+            photoURL: result.user.photoURL,
+            emailVerified: result.user.emailVerified
+          });
           
           // Try as user first, then as admin if that fails and userType allows it
           let authResult = await firebaseAuth(idToken, 'user');

@@ -11,16 +11,23 @@ class UserCreate(BaseModel):
     phone: Optional[str] = None
 
 class UserUpdate(BaseModel):
-    name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     email: Optional[str] = None
     company: Optional[str] = None
     preferences: Optional[str] = None
     role: Optional[str] = None
     phone: Optional[str] = None
 
+class GoogleUserUpdate(BaseModel):
+    """Update model for Google OAuth users - limited fields they can update"""
+    preferences: Optional[str] = None
+    phone: Optional[str] = None
+
 class UserResponse(BaseModel):
     user_id: str
-    name: str
+    first_name: str
+    last_name: str
     email: str
     company: Optional[str] = None
     preferences: Optional[str] = None

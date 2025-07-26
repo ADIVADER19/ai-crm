@@ -71,7 +71,8 @@ const Profile = () => {
     try {
       await crmAPI.updateUser(user.user_id, {
         company: profileData.company,
-        preferences: profileData.preferences
+        preferences: profileData.preferences,
+        phone: profileData.phone
       });
       setMessage('Profile updated successfully!');
     } catch (error) {

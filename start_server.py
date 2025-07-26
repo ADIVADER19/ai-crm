@@ -12,8 +12,6 @@ def main():
     try:
         client.admin.command('ping')
         print("MongoDB connection successful")
-        
-        print("Vector store will be built when documents are uploaded via /upload/upload_docs")
         print("Ready to receive uploads and process conversations")
         
     except Exception as e:

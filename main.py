@@ -1,8 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import chat, crm, auth, reset, upload
+from services.rag_service import initialize_vector_store
 
 app = FastAPI(title="RentRadar Chatbot", version="1.0.0")
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize vector store on server startup"""
+    print("🚀 Starting RentRadar server...")
+    initialize_vector_store()
+    print("✅ Server startup complete!")
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth } from '../firebase';
+import { useAuth } from '../contexts/AuthContext';
 import { crmAPI } from '../services/api';
+import GoogleOAuth from '../components/GoogleOAuth';
 import './Auth.css';
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const { firebaseAuth } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -14,6 +19,7 @@ const SignUp = () => {
     phone: ''
   });
   const [loading, setLoading] = useState(false);
+  const [firebaseLoading, setFirebaseLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -43,12 +49,99 @@ const SignUp = () => {
     }
   };
 
+  // Firebase Email/Password Signup
+  const handleFirebaseSignUp = async () => {
+    if (!formData.email || !formData.password || !formData.name) {
+      setError('Please fill in all required fields (name, email, password)');
+      return;
+    }
+
+    setFirebaseLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Create Firebase user
+      const userCredential = await createUserWithEmailAndPassword(
+        auth, 
+        formData.email, 
+        formData.password
+      );
+
+      // Update Firebase profile with name
+      await updateProfile(userCredential.user, {
+        displayName: formData.name
+      });
+
+      // Get Firebase ID token
+      const idToken = await userCredential.user.getIdToken();
+
+      // Authenticate with backend and create user profile
+      const authResult = await firebaseAuth(idToken, 'user');
+
+      if (authResult.success) {
+        // Create additional user profile data in CRM
+        try {
+          await crmAPI.createUser({
+            name: formData.name,
+            email: formData.email,
+            company: formData.company || '',
+            phone: formData.phone || '',
+            preferences: formData.preferences || '',
+            firebase_uid: userCredential.user.uid,
+            auth_provider: 'firebase'
+          });
+        } catch (crmError) {
+          console.warn('CRM profile creation failed:', crmError);
+          // Continue anyway since the user is created in Firebase and backend
+        }
+
+        setSuccess('Firebase account created successfully!');
+        setTimeout(() => {
+          navigate('/chat');
+        }, 1500);
+      } else {
+        throw new Error(authResult.error);
+      }
+    } catch (error) {
+      console.error('Firebase signup error:', error);
+      setError(error.message || 'Failed to create Firebase account');
+    } finally {
+      setFirebaseLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = (result) => {
+    // User account is created automatically via Firebase authentication
+    navigate('/chat');
+  };
+
+  const handleGoogleError = (error) => {
+    setError(error);
+  };
+
   return (
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
           <h1>Sign Up</h1>
           <p>Create your RentRadar account</p>
+        </div>
+
+        {/* Google OAuth for easy signup */}
+        <div className="oauth-section">
+          <div className="oauth-buttons">
+            <GoogleOAuth
+              userType="user"
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              buttonText="Sign up with Google"
+            />
+          </div>
+          
+          <div className="divider">
+            <span>OR</span>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
@@ -137,6 +230,21 @@ const SignUp = () => {
             disabled={loading}
           >
             {loading ? 'Creating Account...' : 'Sign Up'}
+          </button>
+
+          {/* Firebase Email Sign Up Option */}
+          <button 
+            type="button"
+            onClick={handleFirebaseSignUp}
+            className="auth-button"
+            disabled={firebaseLoading}
+            style={{
+              backgroundColor: '#4285f4',
+              color: 'white',
+              marginTop: '10px'
+            }}
+          >
+            {firebaseLoading ? 'Creating Firebase Account...' : 'Sign Up with Firebase'}
           </button>
         </form>
 

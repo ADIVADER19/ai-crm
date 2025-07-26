@@ -8,6 +8,7 @@ from typing import Optional
 from bson import ObjectId
 from services.crm_service import get_user, create_user
 from services.db_service import users_collection
+from services.google_oauth import firebase_auth
 from helpers import create_access_token, verify_token_payload
 from bson import ObjectId
 
@@ -17,6 +18,10 @@ security = HTTPBearer()
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+class FirebaseAuthRequest(BaseModel):
+    id_token: str
+    user_type: str = "user"  # "user" or "admin"
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -112,6 +117,83 @@ def login(login_request: LoginRequest, response: Response):
             "email": user["email"],
             "name": user.get("name", ""),
             "role": user.get("role", "user")
+        }
+    )
+
+@router.post("/firebase-auth", response_model=TokenResponse)
+def firebase_auth(auth_request: FirebaseAuthRequest, response: Response):
+    """Handle Firebase authentication for both users and admins"""
+    
+    # Verify Firebase token
+    firebase_user = firebase_auth.verify_firebase_token(auth_request.id_token)
+    if not firebase_user:
+        raise HTTPException(status_code=401, detail="Invalid Firebase token")
+    
+    # Check if user exists
+    user = users_collection.find_one({"email": firebase_user["email"]})
+    
+    if auth_request.user_type == "admin":
+        # For admin login - user must already exist with admin role
+        if not user:
+            raise HTTPException(status_code=403, detail="Admin account not found")
+        
+        if user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        # Update Firebase UID if not set
+        if not user.get("firebase_uid"):
+            users_collection.update_one(
+                {"_id": user["_id"]},
+                {"$set": {"firebase_uid": firebase_user["firebase_uid"], "picture": firebase_user.get("picture", "")}}
+            )
+    
+    else:
+        # For regular users - create account if doesn't exist
+        if not user:
+            # Create new user account
+            new_user = {
+                "email": firebase_user["email"],
+                "name": firebase_user["name"],
+                "firebase_uid": firebase_user["firebase_uid"],
+                "picture": firebase_user.get("picture", ""),
+                "role": "user",
+                "auth_provider": "firebase"
+            }
+            result = users_collection.insert_one(new_user)
+            user = users_collection.find_one({"_id": result.inserted_id})
+        else:
+            # Update existing user with Firebase info
+            if not user.get("firebase_uid"):
+                users_collection.update_one(
+                    {"_id": user["_id"]},
+                    {"$set": {
+                        "firebase_uid": firebase_user["firebase_uid"], 
+                        "picture": firebase_user.get("picture", ""),
+                        "auth_provider": "firebase"
+                    }}
+                )
+    
+    # Create access token
+    access_token = create_access_token(data={"sub": str(user["_id"])})
+    
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=False,
+        samesite="none",
+        max_age=86400
+    )
+    
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer",
+        user={
+            "id": str(user["_id"]),
+            "email": user["email"],
+            "name": user.get("name", ""),
+            "role": user.get("role", "user"),
+            "picture": user.get("picture", "")
         }
     )
 

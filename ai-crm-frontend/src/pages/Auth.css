@@ -176,3 +176,45 @@
     font-size: 1.5rem;
   }
 }
+
+/* OAuth Section Styles */
+.oauth-section {
+  margin-bottom: 30px;
+}
+
+.oauth-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.google-oauth-btn {
+  width: 100% !important;
+  min-width: auto !important;
+  justify-content: center !important;
+}
+
+.divider {
+  position: relative;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #e0e0e0;
+}
+
+.divider span {
+  background: white;
+  padding: 0 15px;
+  color: #666;
+  font-size: 14px;
+  position: relative;
+}

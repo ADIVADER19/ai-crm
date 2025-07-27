@@ -13,6 +13,7 @@ const Login = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleChange = (e) => {
     setFormData({
@@ -25,6 +26,7 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     const result = await login(formData.email, formData.password);
     
@@ -38,15 +40,22 @@ const Login = () => {
   };
 
   const handleGoogleSuccess = (result) => {
-    // Navigate based on user role
-    if (result.user?.role === 'admin') {
-      navigate('/admin');
-    } else {
-      navigate('/chat');
-    }
+    // Show success message
+    setError('');
+    setSuccess('Successfully signed in with Google!');
+    
+    // Navigate after a brief delay to show the message
+    setTimeout(() => {
+      if (result.user?.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/chat');
+      }
+    }, 1000);
   };
 
   const handleGoogleError = (error) => {
+    setSuccess('');
     setError(error);
   };
 
@@ -102,6 +111,7 @@ const Login = () => {
           </div>
 
           {error && <div className="error-message">{error}</div>}
+          {success && <div className="success-message">{success}</div>}
 
           <button 
             type="submit" 

@@ -52,16 +52,35 @@ const GoogleOAuth = ({ userType = 'user', onSuccess, onError, buttonText }) => {
       }
       
       if (authResult.success) {
+        console.log('✅ Google OAuth successful:', authResult.user?.email);
         if (onSuccess) {
           onSuccess(authResult);
         }
       } else {
-        throw new Error(authResult.error);
+        // Handle specific error messages from backend
+        const errorMessage = authResult.error || 'Authentication failed';
+        console.error('❌ Firebase auth failed:', errorMessage);
+        throw new Error(errorMessage);
       }
     } catch (error) {
       console.error('Firebase OAuth error:', error);
+      
+      // Provide user-friendly error messages
+      let userMessage = 'Authentication failed. Please try again.';
+      
+      if (error.code === 'auth/popup-closed-by-user') {
+        userMessage = 'Sign-in was cancelled. Please try again.';
+      } else if (error.code === 'auth/network-request-failed') {
+        userMessage = 'Network error. Please check your connection and try again.';
+      } else if (error.code === 'auth/too-many-requests') {
+        userMessage = 'Too many sign-in attempts. Please wait a moment and try again.';
+      } else if (error.message) {
+        // Use backend error messages if available
+        userMessage = error.message;
+      }
+      
       if (onError) {
-        onError(error.message || 'Authentication failed');
+        onError(userMessage);
       }
     }
   };

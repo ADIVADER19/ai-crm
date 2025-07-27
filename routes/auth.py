@@ -131,98 +131,123 @@ def login(login_request: LoginRequest, response: Response):
 def firebase_auth(auth_request: FirebaseAuthRequest, response: Response):
     """Handle Firebase authentication for both users and admins"""
     
-    # Verify Firebase token
-    firebase_user = firebase_service.verify_firebase_token(auth_request.id_token)
-    if not firebase_user:
-        raise HTTPException(status_code=401, detail="Invalid Firebase token")
-    
-    # Check if user exists
-    user = users_collection.find_one({"email": firebase_user["email"]})
-    
-    if auth_request.user_type == "admin":
-        # For admin login - user must already exist with admin role
-        if not user:
-            raise HTTPException(status_code=403, detail="Admin account not found")
+    try:
+        # Verify Firebase token
+        firebase_user = firebase_service.verify_firebase_token(auth_request.id_token)
+        if not firebase_user:
+            raise HTTPException(status_code=401, detail="Invalid Google authentication token. Please try signing in again.")
         
-        if user.get("role") != "admin":
-            raise HTTPException(status_code=403, detail="Admin access required")
+        # Check if user exists in MongoDB
+        user = users_collection.find_one({"email": firebase_user["email"]})
         
-        # Update Firebase UID if not set
-        if not user.get("firebase_uid"):
-            users_collection.update_one(
-                {"_id": user["_id"]},
-                {"$set": {"firebase_uid": firebase_user["firebase_uid"], "picture": firebase_user.get("picture", "")}}
-            )
-    
-    else:
-        # For regular users - create account if doesn't exist
-        if not user:
-            # Create new user account with same structure as normal signup
-            new_user = {
-                "name": firebase_user["name"],
-                "email": firebase_user["email"],
-                "company": "",  # Empty string like normal signup default
-                "preferences": "",  # Empty string like normal signup default
-                "role": "user",
-                "phone": "",  # Empty string like normal signup default
-                "firebase_uid": firebase_user["firebase_uid"],  # Add for Firebase linking
-                "auth_provider": "firebase"  # Track auth method
-            }
-            result = users_collection.insert_one(new_user)
-            user = users_collection.find_one({"_id": result.inserted_id})
-            print(f"✅ Created new Google user: {firebase_user['email']}")
-        else:
-            # Update existing user with Firebase UID if not set
-            update_data = {}
+        if auth_request.user_type == "admin":
+            # For admin login - user must already exist with admin role
+            if not user:
+                raise HTTPException(status_code=403, detail="Admin account not found. Please contact an administrator to set up your admin access.")
             
-            # Update Firebase UID if not present
+            if user.get("role") != "admin":
+                raise HTTPException(status_code=403, detail="Administrator access required. Your account does not have admin privileges.")
+            
+            # Update Firebase UID if not set
             if not user.get("firebase_uid"):
-                update_data["firebase_uid"] = firebase_user["firebase_uid"]
-                update_data["auth_provider"] = "firebase"
-                
-            # Update name if it's empty or different
-            if not user.get("name") or user.get("name") != firebase_user.get("name"):
-                update_data["name"] = firebase_user["name"]
-            
-            if update_data:
                 users_collection.update_one(
                     {"_id": user["_id"]},
-                    {"$set": update_data}
+                    {"$set": {"firebase_uid": firebase_user["firebase_uid"]}}
                 )
-                user = users_collection.find_one({"_id": user["_id"]})
+                print(f"✅ Updated admin Firebase UID: {firebase_user['email']}")
+        
+        else:
+            # For regular users - create account if doesn't exist
+            if not user:
+                try:
+                    # Create new user account with same structure as normal signup
+                    new_user = {
+                        "name": firebase_user.get("name", ""),
+                        "email": firebase_user["email"],
+                        "company": "",  # Empty string like normal signup default
+                        "preferences": "",  # Empty string like normal signup default
+                        "role": "user",
+                        "phone": "",  # Empty string like normal signup default
+                        "firebase_uid": firebase_user["firebase_uid"],  # Add for Firebase linking
+                        "auth_provider": "firebase"  # Track auth method
+                    }
+                    
+                    result = users_collection.insert_one(new_user)
+                    user = users_collection.find_one({"_id": result.inserted_id})
+                    
+                    if not user:
+                        raise HTTPException(status_code=500, detail="Failed to create user account. Please try again.")
+                    
+                    print(f"✅ Created new Google user in MongoDB: {firebase_user['email']}")
+                    
+                except Exception as e:
+                    print(f"❌ Error creating user: {str(e)}")
+                    raise HTTPException(status_code=500, detail="Failed to create your account. Please try again or contact support.")
             
-            print(f"✅ Updated existing user login: {firebase_user['email']}")
+            else:
+                try:
+                    # Update existing user with Firebase UID if not set
+                    update_data = {}
+                    
+                    # Update Firebase UID if not present
+                    if not user.get("firebase_uid"):
+                        update_data["firebase_uid"] = firebase_user["firebase_uid"]
+                        update_data["auth_provider"] = "firebase"
+                        
+                    # Update name if it's empty or different
+                    if not user.get("name") or user.get("name") != firebase_user.get("name", ""):
+                        update_data["name"] = firebase_user.get("name", "")
+                    
+                    if update_data:
+                        users_collection.update_one(
+                            {"_id": user["_id"]},
+                            {"$set": update_data}
+                        )
+                        user = users_collection.find_one({"_id": user["_id"]})
+                    
+                    print(f"✅ Updated existing user login: {firebase_user['email']}")
+                
+                except Exception as e:
+                    print(f"❌ Error updating user: {str(e)}")
+                    raise HTTPException(status_code=500, detail="Failed to update your account. Please try again.")
+        
+        # Verify user was properly retrieved/created
+        if not user:
+            raise HTTPException(status_code=500, detail="Account setup failed. Please try again or contact support.")
+        
+        # Create access token
+        access_token = create_access_token(data={"sub": str(user["_id"])})
+        
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            secure=False,
+            samesite="none",
+            max_age=86400
+        )
+        
+        return TokenResponse(
+            access_token=access_token,
+            token_type="bearer",
+            user={
+                "user_id": str(user["_id"]),
+                "email": user["email"],
+                "name": user.get("name", ""),
+                "role": user.get("role", "user"),
+                "company": user.get("company", ""),
+                "phone": user.get("phone", ""),
+                "preferences": user.get("preferences", ""),
+                "auth_provider": user.get("auth_provider", "")
+            }
+        )
     
-    # Create access token
-    access_token = create_access_token(data={"sub": str(user["_id"])})
-    
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        secure=False,
-        samesite="none",
-        max_age=86400
-    )
-    
-    return TokenResponse(
-        access_token=access_token,
-        token_type="bearer",
-        user={
-            "id": str(user["_id"]),
-            "email": user["email"],
-            "name": user.get("name", ""),
-            "role": user.get("role", "user"),
-            "picture": user.get("picture", ""),
-            "email_verified": user.get("email_verified", False),
-            "provider": user.get("provider", ""),
-            "auth_provider": user.get("auth_provider", ""),
-            "company": user.get("company", ""),
-            "phone": user.get("phone", ""),
-            "created_at": str(user.get("created_at", "")),
-            "last_login": str(user.get("last_login", ""))
-        }
-    )
+    except HTTPException:
+        # Re-raise HTTP exceptions with custom messages
+        raise
+    except Exception as e:
+        print(f"❌ Unexpected Firebase auth error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Authentication failed due to a server error. Please try again.")
 
 @router.post("/verify")
 def verify_user_token(user_id: str = Depends(verify_token)):

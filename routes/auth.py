@@ -8,7 +8,7 @@ from typing import Optional
 from bson import ObjectId
 from services.crm_service import get_user, create_user
 from services.db_service import users_collection
-from services.google_oauth import firebase_auth
+from services.google_oauth import firebase_auth as firebase_service
 from helpers import create_access_token, verify_token_payload
 from bson import ObjectId
 
@@ -132,7 +132,7 @@ def firebase_auth(auth_request: FirebaseAuthRequest, response: Response):
     """Handle Firebase authentication for both users and admins"""
     
     # Verify Firebase token
-    firebase_user = firebase_auth.verify_firebase_token(auth_request.id_token)
+    firebase_user = firebase_service.verify_firebase_token(auth_request.id_token)
     if not firebase_user:
         raise HTTPException(status_code=401, detail="Invalid Firebase token")
     

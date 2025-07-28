@@ -98,7 +98,7 @@ const SignUp = () => {
 
         setSuccess('Firebase account created successfully!');
         setTimeout(() => {
-          navigate('/chat');
+          navigate('/login');
         }, 1500);
       } else {
         throw new Error(authResult.error);
@@ -112,8 +112,11 @@ const SignUp = () => {
   };
 
   const handleGoogleSuccess = (result) => {
-    // User account is created automatically via Firebase authentication
-    navigate('/chat');
+    // Redirect to login page instead of auto-login
+    setSuccess('Account created successfully! Please login with your credentials.');
+    setTimeout(() => {
+      navigate('/login');
+    }, 2000);
   };
 
   const handleGoogleError = (error) => {

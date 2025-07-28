@@ -10,7 +10,6 @@ from services.crm_service import get_user, create_user
 from services.db_service import users_collection
 from services.google_oauth import firebase_auth as firebase_service
 from helpers import create_access_token, verify_token_payload
-from bson import ObjectId
 
 router = APIRouter(prefix="/auth")
 security = HTTPBearer()

@@ -120,7 +120,16 @@ const SignUp = () => {
   };
 
   const handleGoogleError = (error) => {
-    setError(error);
+    // Check if user already exists
+    if (error && error.includes('User already exists')) {
+      setError('User already exists. Please proceed to login instead of signing up.');
+      // Optionally redirect to login after showing the message
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000);
+    } else {
+      setError(error);
+    }
   };
 
   return (
@@ -136,6 +145,7 @@ const SignUp = () => {
           <div className="oauth-buttons">
             <GoogleOAuth
               userType="user"
+              mode="signup"
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleError}
               buttonText="Sign up with Google"

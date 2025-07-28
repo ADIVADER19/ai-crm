@@ -3,8 +3,8 @@ import { signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase
 import { auth, googleProvider } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 
-const GoogleOAuth = ({ userType = 'user', onSuccess, onError, buttonText }) => {
-  const { firebaseAuth } = useAuth();
+const GoogleOAuth = ({ userType = 'user', mode = 'signup', onSuccess, onError, buttonText }) => {
+  const { firebaseAuth, firebaseLogin } = useAuth();
 
   // Configure Google provider to request additional user information
   React.useEffect(() => {
@@ -43,12 +43,14 @@ const GoogleOAuth = ({ userType = 'user', onSuccess, onError, buttonText }) => {
         metadata: result.user.metadata
       });
       
-      // Try as user first, then as admin if that fails and userType allows it
-      let authResult = await firebaseAuth(idToken, 'user');
-      
-      // If user authentication fails and we're looking for admin, try admin auth
-      if (!authResult.success && userType === 'admin') {
-        authResult = await firebaseAuth(idToken, 'admin');
+      // Use appropriate authentication method based on mode
+      let authResult;
+      if (mode === 'login') {
+        // For login page - use firebaseLogin endpoint
+        authResult = await firebaseLogin(idToken, userType);
+      } else {
+        // For signup page - use firebaseAuth endpoint (new users only)
+        authResult = await firebaseAuth(idToken, userType);
       }
       
       if (authResult.success) {
@@ -102,12 +104,14 @@ const GoogleOAuth = ({ userType = 'user', onSuccess, onError, buttonText }) => {
             emailVerified: result.user.emailVerified
           });
           
-          // Try as user first, then as admin if that fails and userType allows it
-          let authResult = await firebaseAuth(idToken, 'user');
-          
-          // If user authentication fails and we're looking for admin, try admin auth
-          if (!authResult.success && userType === 'admin') {
-            authResult = await firebaseAuth(idToken, 'admin');
+          // Use appropriate authentication method based on mode
+          let authResult;
+          if (mode === 'login') {
+            // For login page - use firebaseLogin endpoint
+            authResult = await firebaseLogin(idToken, userType);
+          } else {
+            // For signup page - use firebaseAuth endpoint (new users only)
+            authResult = await firebaseAuth(idToken, userType);
           }
           
           if (authResult.success) {

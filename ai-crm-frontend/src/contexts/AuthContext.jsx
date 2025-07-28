@@ -125,6 +125,29 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Firebase login for existing users
+  const firebaseLogin = async (idToken, userType = 'user') => {
+    try {
+      const response = await authAPI.firebaseLogin(idToken, userType);
+      const { access_token } = response;
+      
+      localStorage.setItem('token', access_token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      setToken(access_token);
+      setUser({
+        ...response.user,
+        role: response.user.role || 'user'
+      });
+      
+      return { success: true, user: response.user };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || 'Firebase login failed' 
+      };
+    }
+  };
+
   const value = {
     user,
     token,
@@ -133,6 +156,7 @@ export const AuthProvider = ({ children }) => {
     signup,
     logout,
     firebaseAuth,
+    firebaseLogin,
     loading,
     isAuthenticated: !!token && !!user
   };

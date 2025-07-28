@@ -43,6 +43,14 @@ export const authAPI = {
     return response.data;
   },
   
+  firebaseLogin: async (idToken, userType = 'user') => {
+    const response = await api.post('/auth/firebase-login', { 
+      id_token: idToken, 
+      user_type: userType 
+    });
+    return response.data;
+  },
+  
   logout: async () => {
     const response = await api.post('/auth/logout');
     return response.data;

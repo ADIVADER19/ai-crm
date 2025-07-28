@@ -72,6 +72,7 @@ const Login = () => {
           <div className="oauth-buttons">
             <GoogleOAuth
               userType="user"
+              mode="login"
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleError}
               buttonText="Continue with Google"

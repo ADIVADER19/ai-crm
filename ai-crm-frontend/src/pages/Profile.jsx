@@ -29,12 +29,15 @@ const Profile = () => {
   const loadUserData = async () => {
     setLoading(true);
     try {
-      const userResponse = await crmAPI.getUser(user.user_id);
+      // Handle both user_id (from login/firebase) and id (from /auth/me)
+      const userId = user.user_id || user.id;
+      
+      const userResponse = await crmAPI.getUser(userId);
       if (userResponse.user) {
         setProfileData(userResponse.user);
       }
 
-      const conversationsResponse = await crmAPI.getConversations(user.user_id);
+      const conversationsResponse = await crmAPI.getConversations(userId);
       if (conversationsResponse.conversations) {
         setConversations(conversationsResponse.conversations);
       }
@@ -69,7 +72,10 @@ const Profile = () => {
     setMessage('');
 
     try {
-      await crmAPI.updateUser(user.user_id, {
+      // Handle both user_id (from login/firebase) and id (from /auth/me)
+      const userId = user.user_id || user.id;
+      
+      await crmAPI.updateUser(userId, {
         company: profileData.company,
         preferences: profileData.preferences,
         phone: profileData.phone

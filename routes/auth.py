@@ -119,7 +119,7 @@ def login(login_request: LoginRequest, response: Response):
         access_token=access_token,
         token_type="bearer",
         user={
-            "id": str(user["_id"]),
+            "user_id": str(user["_id"]),
             "email": user["email"],
             "name": user.get("name", ""),
             "role": user.get("role", "user")

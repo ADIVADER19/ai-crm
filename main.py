@@ -14,21 +14,22 @@ async def startup_event():
     print("✅ Server startup complete!")
 
 # Configure CORS for deployment
-allowed_origins = [
-    "http://localhost:3000",  # React development
-    "http://localhost:5173",  # Vite development
-    "http://localhost:4173",  # Vite preview
-    "https://rentradarassist.vercel.app"
-]
-
-# Add production frontend URLs if environment variables are set
-frontend_url = os.getenv("FRONTEND_URL")
-if frontend_url:
-    allowed_origins.append(frontend_url)
-
-# For production deployment
 if os.getenv("RENDER"):
-    allowed_origins = ["*"]  # Allow all origins in production
+    # Production: specific allowed origins including local development
+    allowed_origins = [
+        "https://rentradarassist.vercel.app",
+        "http://localhost:5173",  # Allow local frontend for development
+        "http://localhost:3000",  # Allow local React for development
+        "http://127.0.0.1:5173",  # Alternative localhost
+        "http://127.0.0.1:3000",  # Alternative localhost
+    ]
+    # Add production frontend URLs if environment variables are set
+    frontend_url = os.getenv("FRONTEND_URL")
+    if frontend_url:
+        allowed_origins.append(frontend_url)
+else:
+    # Development: allow all origins
+    allowed_origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
